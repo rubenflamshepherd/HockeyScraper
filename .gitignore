@@ -1,3 +1,4 @@
-# Ignoring python modules that have been run
-# and have created temp files
+# Ignoring python modules that have been run and have created temp files
 *.pyc
+# Ignoring html game reports that have been saved in local directory
+*.html
