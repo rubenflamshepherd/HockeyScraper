@@ -1,7 +1,7 @@
 import string
 import sqlite3
 import time
-from lxml import html
+from lxml import html, etree
 import requests
 from Objects import Event
 from dateutil.parser import parse
@@ -220,13 +220,85 @@ def active_players_scraper ():
 	total_time = time.time() - start_time
 	print "%0.2fs - total time taken" %total_time
 	print str(records_updated), " - records updated"
+
+def supplemental_scraper ():
+	'''
+	For each unique playerid in data
+	Parse through table of active nhl players on nhl.com and update relevant
+	player records 
+	'''
+
+	# Tracking time it takes function to run
+	start_time = time.time()
+
+	# Create database, connection and cursor
+	conn = sqlite3.connect ('nhl.db')
+	c = conn.cursor ()
+
+	# Containers for player information
+	num = None
+	height = None
+	weight = None
+	shoots = None
+	draft_team = None
+	draft_yr = None
+	draft_rnd = None
+	draft_overall = None
+	twitter = None
+
+	# Visit player link and grab xml tags
+	url = "http://www.nhl.com/ice/player.htm?id=8473994"
+	page = requests.get (url)
+	tree = html.fromstring (page.text)
+
+	info_raw = tree.xpath('//div[@id="tombstone"]/div/table//tr/td/text()')
+	website_raw = tree.xpath('//div[@id="tombstone"]//div[@id="playerSite"]/a/@href')
+	twitter_raw = tree.xpath('//div[@id="tombstone"]/div/table/tr/td/a/@href')
+
+	info_stripped = [x.strip() for x in info_raw]
+
+	for x in range(len (info_stripped)):
+		if info_stripped[x].strip() == "NUMBER:":
+			num = info_stripped[x+1]
+		elif info_stripped[x].strip() == "HEIGHT:":
+			height = info_stripped[x+1]
+		elif info_stripped[x].strip() == "WEIGHT:":
+			weight = info_stripped[x+1]
+		elif info_stripped[x].strip() == "DRAFTED:":
+			draft_team = info_stripped[x+1].strip('/').strip().strip()
+		elif info_stripped[x].strip() == "Shoots:":
+			shoots = info_stripped[x+1]
+		elif info_stripped[x].strip() == "ROUND:":
+			draft_rnd = info_stripped[x+1]
+			draft_overall = info_stripped[x+2].strip('()')
+
+	try:
+		website = website_raw [0]
+	except IndexError:
+		website = None
+
+	for item in twitter_raw:
+		if item.find ("/ice/draftsearch.htm?team=") != -1:
+			draft_yr = item.split ('=') [-1]
+		elif item.find ("https://twitter.com/") != -1:
+			twitter = item.split('/') [-1]
+
+	print twitter_raw		
+	
+	print num
+	print height
+	print weight
+	print shoots
+	print draft_team
+	print draft_yr
+	print draft_rnd
+	print draft_overall
+	print website
+	print twitter
+
 	
 if __name__ == '__main__':
-	#game_info_scraper ("20142015", "0001")
-	'''
-	events = playbyplay_scraper ("20142015", "0001")
-	for x in range (0,20):
-		print events[x]
-	'''
-	#all_players_scraper()
-	active_players_scraper()
+	# all_players_scraper()
+	# active_players_scraper()
+
+	supplemental_scraper ()

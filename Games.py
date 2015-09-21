@@ -185,4 +185,10 @@ def playbyplay_scraper (year, game_num):
 if __name__ == '__main__':
 	grabber ("20142015", 1, 110, '02')
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
+	#game_info_scraper ("20142015", "0001")
+	'''
+	events = playbyplay_scraper ("20142015", "0001")
+	for x in range (0,20):
+		print events[x]
+	'''
 
