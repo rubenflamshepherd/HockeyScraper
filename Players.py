@@ -239,7 +239,7 @@ def supplemental_scraper ():
 	num = None
 	height = None
 	weight = None
-	shoots = None
+	hand = None
 	draft_team = None
 	draft_yr = None
 	draft_rnd = None
@@ -247,13 +247,17 @@ def supplemental_scraper ():
 	twitter = None
 
 	# Visit player link and grab xml tags
-	url = "http://www.nhl.com/ice/player.htm?id=8473994"
+	url = "http://www.nhl.com/ice/player.htm?id=8448208"
 	page = requests.get (url)
 	tree = html.fromstring (page.text)
 
 	info_raw = tree.xpath('//div[@id="tombstone"]/div/table//tr/td/text()')
 	website_raw = tree.xpath('//div[@id="tombstone"]//div[@id="playerSite"]/a/@href')
 	twitter_raw = tree.xpath('//div[@id="tombstone"]/div/table/tr/td/a/@href')
+	raw = tree.xpath('//table[@class="data playerStats"]/preceding-sibling::h3/text()')
+	seasons_raw = tree.xpath('//div/div/h3[.="CAREER REGULAR SEASON STATISTICS"]/following-sibling::table[1]//tr')
+	nhl_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-weight: bold;"]')
+	other_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-style: italic;"]')
 
 	info_stripped = [x.strip() for x in info_raw]
 
@@ -261,13 +265,16 @@ def supplemental_scraper ():
 		if info_stripped[x].strip() == "NUMBER:":
 			num = info_stripped[x+1]
 		elif info_stripped[x].strip() == "HEIGHT:":
-			height = info_stripped[x+1]
+			height_raw = info_stripped[x+1].split ("\' ")
+			height = height_raw[0] + ',' + height_raw[1].strip('"')
 		elif info_stripped[x].strip() == "WEIGHT:":
 			weight = info_stripped[x+1]
 		elif info_stripped[x].strip() == "DRAFTED:":
 			draft_team = info_stripped[x+1].strip('/').strip().strip()
 		elif info_stripped[x].strip() == "Shoots:":
-			shoots = info_stripped[x+1]
+			hand = info_stripped[x+1] [0]
+		elif info_stripped[x].strip() == "Catches:":
+			hand = info_stripped[x+1] [0]
 		elif info_stripped[x].strip() == "ROUND:":
 			draft_rnd = info_stripped[x+1]
 			draft_overall = info_stripped[x+2].strip('()')
@@ -283,19 +290,81 @@ def supplemental_scraper ():
 		elif item.find ("https://twitter.com/") != -1:
 			twitter = item.split('/') [-1]
 
-	print twitter_raw		
+	statistic_parser ('R', other_playoffs_raw, nhl_playoffs_raw)
+
+	#print etree.tostring (seasons_raw[0], pretty_print = True)
 	
+	'''
 	print num
-	print height
+	print [height]
 	print weight
-	print shoots
+	print hand
 	print draft_team
 	print draft_yr
 	print draft_rnd
 	print draft_overall
 	print website
 	print twitter
+	'''
 
+def statistic_parser(pos, other_rows, nhl_rows):
+	'''
+	takes positions (pos) and rows from career regular and playoff statistic
+	table from player page on nhl.com and return consolidated table
+	'''
+	info = []
+	
+	for row in other_rows:
+		info_raw = row.xpath('./td')
+		temp = []
+
+		for item in info_raw:
+			if len(item.xpath('./span')) == 1:
+				temp.append(item.xpath('./span/text()'))
+			else:
+				try:
+					temp.append(item.xpath('./text()')[0].strip())
+				except IndexError:
+					temp.append (None)
+				#temp.append(item.xpath('./text()'))
+		print temp
+		'''
+		info_raw = row.xpath('./td/text()')
+		#span_elements are gp, shots, shot percent but not all of them neccisarily
+		span_elements = row.xpath('./td/span/text()')
+		print span_elements
+		temp = []
+
+		for index, item in enumerate(info_raw):
+			if item.strip() == '':
+				temp.append (None)
+			else:
+				temp.append(item.strip())
+
+		if len(span_elements) == 1:
+			temp.insert (2, span_elements[0])
+		elif len(span_elements) == 3:
+			temp.insert (span_elements[0])
+			temp.append (span_elements[1])
+			temp.append (span_elements[2])
+		info.append(temp)
+	'''
+	'''
+	for row in nhl_rows:
+		info_raw = row.xpath('./td/text()')
+		team_raw = row.xpath('./td/a/text()')
+		temp = []
+		for item in info_raw:
+			if item.strip() == '':
+				temp.append (None)
+			else:
+				temp.append(item.strip())
+		try:
+			temp.insert(1,team_raw[0])
+		except IndexError: # Should flag on last (summary) row
+			pass
+		info.append(temp)
+	'''
 	
 if __name__ == '__main__':
 	# all_players_scraper()
