@@ -221,19 +221,11 @@ def active_players_scraper ():
 	print "%0.2fs - total time taken" %total_time
 	print str(records_updated), " - records updated"
 
-def supplemental_scraper ():
+def supplemental_scraper (playerid, pos):
 	'''
-	For each unique playerid in data
-	Parse through table of active nhl players on nhl.com and update relevant
-	player records 
+	Grab supplemental information about player from their page on nhl.com
+	Information includes personal details and season summaries
 	'''
-
-	# Tracking time it takes function to run
-	start_time = time.time()
-
-	# Create database, connection and cursor
-	conn = sqlite3.connect ('nhl.db')
-	c = conn.cursor ()
 
 	# Containers for player information
 	num = None
@@ -247,7 +239,7 @@ def supplemental_scraper ():
 	twitter = None
 
 	# Visit player link and grab xml tags
-	url = "http://www.nhl.com/ice/player.htm?id=8448208"
+	url = "http://www.nhl.com/ice/player.htm?id=%s"%playerid
 	page = requests.get (url)
 	tree = html.fromstring (page.text)
 
@@ -256,8 +248,8 @@ def supplemental_scraper ():
 	twitter_raw = tree.xpath('//div[@id="tombstone"]/div/table/tr/td/a/@href')
 	raw = tree.xpath('//table[@class="data playerStats"]/preceding-sibling::h3/text()')
 	seasons_raw = tree.xpath('//div/div/h3[.="CAREER REGULAR SEASON STATISTICS"]/following-sibling::table[1]//tr')
-	nhl_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-weight: bold;"]')
-	other_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-style: italic;"]')
+	#nhl_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-weight: bold;"]')
+	#other_playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr[@style="font-style: italic;"]')
 
 	info_stripped = [x.strip() for x in info_raw]
 
@@ -290,7 +282,7 @@ def supplemental_scraper ():
 		elif item.find ("https://twitter.com/") != -1:
 			twitter = item.split('/') [-1]
 
-	statistic_parser ('R', other_playoffs_raw, nhl_playoffs_raw)
+	statistic_parser (playerid, 'G', seasons_raw)
 
 	#print etree.tostring (seasons_raw[0], pretty_print = True)
 	
@@ -307,67 +299,90 @@ def supplemental_scraper ():
 	print twitter
 	'''
 
-def statistic_parser(pos, other_rows, nhl_rows):
+def statistic_parser(playerid, pos, rows):
 	'''
-	takes positions (pos) and rows from career regular and playoff statistic
-	table from player page on nhl.com and return consolidated table
+	Takes rows from statistical table from player page on
+	nhl.com and return consolidated table. Tables summarize either regular 
+	season or playoff statistics
 	'''
-	info = []
-	
-	for row in other_rows:
+		
+	for row_index, row in enumerate(rows):
 		info_raw = row.xpath('./td')
-		temp = []
 
-		for item in info_raw:
-			if len(item.xpath('./span')) == 1:
-				temp.append(item.xpath('./span/text()'))
-			else:
-				try:
-					temp.append(item.xpath('./text()')[0].strip())
-				except IndexError:
-					temp.append (None)
-				#temp.append(item.xpath('./text()'))
-		print temp
-		'''
-		info_raw = row.xpath('./td/text()')
-		#span_elements are gp, shots, shot percent but not all of them neccisarily
-		span_elements = row.xpath('./td/span/text()')
-		print span_elements
-		temp = []
+		# Grabbbing row information
+		if row_index != 0 and row_index != len(rows)-1:
+			temp = []
+			for item_index, item in enumerate(info_raw):
+				if len(item.xpath('./span')) == 1:
+					temp_item = item.xpath('./span/text()')[0].strip()
+					temp.append(temp_item)
+				elif len(item.xpath('./a')) == 1:
+					temp.append(item.xpath('./a/text()')[0])
+				else:
+					try:
+						temp_item = item.xpath('./text()')[0].strip()
+						if temp_item == '':
+							temp.append (None)
+						else:
+							temp.append (temp_item)
 
-		for index, item in enumerate(info_raw):
-			if item.strip() == '':
-				temp.append (None)
+					except IndexError:
+						temp.append (None)
+			
+			# Formatting
+			assert len(temp) is 13, "player id %s len(season) %s not 13" %(playerid, temp[0])
+			if pos != 'G':
+				for stat_index, stat in enumerate(temp):
+					if stat != None:
+						if stat_index == len (temp)-1:
+							temp[stat_index] = float(temp[stat_index])
+						elif stat_index > 1 and stat_index < len (temp)-1:
+							temp[stat_index] = int(temp[stat_index])
 			else:
-				temp.append(item.strip())
+				for stat_index, stat in enumerate(temp):
+					if stat != None:
+						if stat_index == 10 or stat_index == 11 : # SV% col
+							temp[stat_index] = float(temp[stat_index])
+						elif stat_index == 5: # Tie col
+							if stat =='-':
+								temp[stat_index] = None
+							else:
+								temp[stat_index] = int(temp[stat_index])
+						elif stat_index == len (temp)-1 or stat_index == 9: # Min col
+							temp[stat_index] = int(temp[stat_index].replace(',',''))
+						elif stat_index > 1:
+							temp[stat_index] = int(temp[stat_index])
 
-		if len(span_elements) == 1:
-			temp.insert (2, span_elements[0])
-		elif len(span_elements) == 3:
-			temp.insert (span_elements[0])
-			temp.append (span_elements[1])
-			temp.append (span_elements[2])
-		info.append(temp)
-	'''
-	'''
-	for row in nhl_rows:
-		info_raw = row.xpath('./td/text()')
-		team_raw = row.xpath('./td/a/text()')
-		temp = []
-		for item in info_raw:
-			if item.strip() == '':
-				temp.append (None)
-			else:
-				temp.append(item.strip())
-		try:
-			temp.insert(1,team_raw[0])
-		except IndexError: # Should flag on last (summary) row
-			pass
-		info.append(temp)
-	'''
+			print temp	
+
+
 	
 if __name__ == '__main__':
 	# all_players_scraper()
 	# active_players_scraper()
 
-	supplemental_scraper ()
+	# Create database, connection and cursor
+	conn = sqlite3.connect ('nhl.db')
+	c = conn.cursor ()
+
+	c.execute ('DROP TABLE IF EXISTS player_seasons')
+	c.execute ('DROP TABLE IF EXISTS goalie_seasons')
+	c.execute(
+		'CREATE TABLE player_seasons (\
+		playerid INTEGER, season TEXT, type INTEGER, team TEXT,\
+		gp INTEGER, g INTEGER, a INTEGER, p INTEGER, plus_minus INTEGER,\
+		pim INTEGER, ppg INTEGER, shg INTEGER, gwg INTEGER, s INTEGER,\
+		s_percent REAL,\
+		PRIMARY KEY (playerid, season, type, team)\
+		)'
+	)
+	
+	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471679,))
+	temp_return = c.fetchone()
+	conn.commit ()
+	conn.close()
+	
+	playerid, pos = temp_return[0], temp_return[3]
+
+	supplemental_scraper (playerid, pos)
+
