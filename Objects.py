@@ -1,3 +1,23 @@
+class Player:
+	def __init__ (self):
+		self.num = None
+		self.height = None
+		self.weight = None
+		self.hand = None
+		self.draft_team = None
+		self.draft_yr = None
+		self.draft_rnd = None
+		self.draft_overall = None
+		self.pos = None
+		self.twitter = None
+
+
+	def __str__ (self):
+
+		return self.num + '\n' + self.height + '\n' + self.weight + '\n' + self.hand\
+		+ '\n' + self.draft_team + '\n' + self.draft_yr + '\n' + self.draft_rnd\
+		+ '\n' + self.draft_overall + '\n' + self.pos + '\n' + self.twitter
+
 class Event:
 
 	def __init__ (self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice):
