@@ -14,9 +14,9 @@ class Player:
 
 	def __str__ (self):
 
-		return self.num + '\n' + self.height + '\n' + self.weight + '\n' + self.hand\
-		+ '\n' + self.draft_team + '\n' + self.draft_yr + '\n' + self.draft_rnd\
-		+ '\n' + self.draft_overall + '\n' + self.pos + '\n' + self.twitter
+		return str(self.num) + '\n' + str(self.height) + '\n' + str(self.weight) + '\n' + str(self.hand)\
+		+ '\n' + str(self.draft_team) + '\n' + str(self.draft_yr) + '\n' + str(self.draft_rnd)\
+		+ '\n' + str(self.draft_overall) + '\n' + str(self.pos) + '\n' + str(self.twitter)
 
 class Event:
 

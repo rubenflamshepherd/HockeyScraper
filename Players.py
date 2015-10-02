@@ -238,14 +238,24 @@ def playerpage_scraper (playerid, pos):
 	seasons_raw = tree.xpath('//div/div/h3[.="CAREER REGULAR SEASON STATISTICS"]/following-sibling::table[1]//tr')
 	playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr')
 
-	seasons = seasons_scraper (playerid, pos, seasons_raw, 0)
+	seasons = career_scraper (playerid, pos, seasons_raw, 0)
+	playoffs = career_scraper (playerid, pos, playoffs_raw, 1)
 
 	# Database time
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
+
+	if pos == 'G':
+		sql_table = "goalies_seasons"
+	else:
+		sql_table = "players_seasons"
+
 	for season in seasons:
 		print season
-		c.execute("INSERT INTO goalies_seasons VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", tuple(season))
+		c.execute("INSERT INTO %s VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"%sql_table, tuple(season))
+	for playoff in playoffs:
+		print playoff
+		c.execute("INSERT INTO %s VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"%sql_table, tuple(playoff))
 
 	# print etree.tostring (seasons_raw[0], pretty_print = True)
 	print player_tombstone
@@ -304,7 +314,7 @@ def tombstone_scraper (tree):
 	return temp_player
 
 
-def seasons_scraper(playerid, pos, rows, season_type):
+def career_scraper(playerid, pos, rows, season_type):
 	'''
 	Takes rows from statistical table from player page on
 	nhl.com and return consolidated table. Tables summarize either regular 
@@ -317,13 +327,14 @@ def seasons_scraper(playerid, pos, rows, season_type):
 
 		# Grabbbing row information
 		if row_index != 0 and row_index != len(rows)-1:
-			temp = [season_type, playerid]
+			temp = [None, season_type, playerid]
 			for item_index, item in enumerate(info_raw):
 				if len(item.xpath('./span')) == 1:
 					temp_item = item.xpath('./span/text()')[0].strip()
 					temp.append(temp_item)
 				elif len(item.xpath('./a')) == 1:
 					temp.append(item.xpath('./a/text()')[0])
+				# Playoffs don't have T/OT columns
 				else:
 					try:
 						temp_item = item.xpath('./text()')[0].strip()
@@ -334,29 +345,32 @@ def seasons_scraper(playerid, pos, rows, season_type):
 
 					except IndexError:
 						temp.append (None)
+					if len (temp) == 7 and season_type == 1 and pos == 'G':
+						temp.append (None)
+						temp.append (None)
 			
 			# Formatting
-			assert len(temp) is 15, "player id %s len(season) %s not 15" %(playerid, temp[0])
+			assert len(temp) is 16, "player id %s len(season) %s not 16, is %s, \n %s" %(playerid, temp[0], len(temp), temp)
 			if pos != 'G':
 				for stat_index, stat in enumerate(temp):
 					if stat != None:
 						if stat_index == len (temp)-1:
 							temp[stat_index] = float(temp[stat_index])
-						elif stat_index > 3 and stat_index < len (temp)-1:
+						elif stat_index > 4 and stat_index < len (temp)-1:
 							temp[stat_index] = int(temp[stat_index])
 			else:
 				for stat_index, stat in enumerate(temp):
 					if stat != None:
-						if stat_index == 12 or stat_index == 13 : # SV% col
+						if stat_index == 13 or stat_index == 14 : # SV% col
 							temp[stat_index] = float(temp[stat_index])
-						elif stat_index == 7: # Tie col
+						elif stat_index == 8: # Tie col
 							if stat =='-':
 								temp[stat_index] = None
 							else:
 								temp[stat_index] = int(temp[stat_index])
-						elif stat_index == len (temp)-1 or stat_index == 11: # Min col
+						elif stat_index == len (temp)-1 or stat_index == 12: # Min col
 							temp[stat_index] = int(temp[stat_index].replace(',',''))
-						elif stat_index > 3:
+						elif stat_index > 4:
 							temp[stat_index] = int(temp[stat_index])
 			info.append(temp)
 			#print temp
@@ -372,21 +386,19 @@ def create_seasons_playoffs_table():
 	
 	c.execute(
 		'CREATE TABLE players_seasons (\
-		season_type INTEGER, playerid INTEGER, season_yr TEXT, team TEXT,\
+		key INTEGER PRIMARY KEY, season_type INTEGER, playerid INTEGER, season_yr TEXT, team TEXT,\
 		gp INTEGER, g INTEGER, a INTEGER, p INTEGER, plus_minus INTEGER,\
 		pim INTEGER, ppg INTEGER, shg INTEGER, gwg INTEGER, s INTEGER,\
-		s_percent REAL,\
-		PRIMARY KEY (playerid, season_yr, season_type, team)\
+		s_percent REAL\
 		)'
 	)
 
 	c.execute(
 		'CREATE TABLE goalies_seasons (\
-		season_type INTEGER, playerid INTEGER, season_yr TEXT, team TEXT,\
+		key INTEGER PRIMARY KEY, season_type INTEGER, playerid INTEGER, season_yr TEXT, team TEXT,\
 		gp INTEGER, w INTEGER, l INTEGER, t INTEGER, ot INTEGER,\
 		so INTEGER, ga INTEGER, sa INTEGER, sv_percent REAL, gaa REAL,\
-		min INTEGER,\
-		PRIMARY KEY (playerid, season_yr, season_type, team)\
+		min INTEGER\
 		)'
 	)
 
@@ -402,7 +414,7 @@ if __name__ == '__main__':
 
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
-	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471679,))
+	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471678,))
 	temp_return = c.fetchone()
 	conn.commit ()
 	conn.close()
