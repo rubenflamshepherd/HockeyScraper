@@ -420,27 +420,7 @@ def create_seasons_playoffs_table():
 	conn.commit ()
 	conn.close()
 
-	
-if __name__ == '__main__':
-	# all_players_scraper()
-	# active_players_scraper()
-	'''
-	create_seasons_playoffs_table()
-
-	conn = sqlite3.connect ('nhl.db')
-	c = conn.cursor ()
-	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471678,))
-	temp_return = c.fetchone()
-	print temp_return
-	conn.commit ()
-	conn.close()
-
-
-	playerid, pos = temp_return[0], temp_return[3]
-
-	playerpage_scraper (playerid, pos)
-	'''
-
+def database_update():
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
 	c.execute ('select * from all_players')
@@ -468,7 +448,23 @@ if __name__ == '__main__':
 
 	conn.commit ()
 	conn.close()
+	
+if __name__ == '__main__':
+	# all_players_scraper()
+	# active_players_scraper()
+	'''
+	create_seasons_playoffs_table()
+
+	conn = sqlite3.connect ('nhl.db')
+	c = conn.cursor ()
+	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471678,))
+	temp_return = c.fetchone()
+	print temp_return
+	conn.commit ()
+	conn.close()
 
 
+	playerid, pos = temp_return[0], temp_return[3]
 
-
+	playerpage_scraper (playerid, pos)
+	'''
