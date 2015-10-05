@@ -4,6 +4,7 @@ class Player:
 		self.height = None
 		self.weight = None
 		self.hand = None
+		self.current_team = None
 		self.draft_team = None
 		self.draft_yr = None
 		self.draft_rnd = None

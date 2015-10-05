@@ -251,14 +251,14 @@ def playerpage_scraper (playerid, pos):
 		sql_table = "players_seasons"
 
 	for season in seasons:
-		print season
+		#print season
 		c.execute("INSERT INTO %s VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"%sql_table, tuple(season))
 	for playoff in playoffs:
-		print playoff
+		#print playoff
 		c.execute("INSERT INTO %s VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"%sql_table, tuple(playoff))
 
 	# print etree.tostring (seasons_raw[0], pretty_print = True)
-	print player_tombstone
+	# print player_tombstone
 	conn.commit ()
 	conn.close()
 	
@@ -274,6 +274,10 @@ def tombstone_scraper (tree):
 	website_raw = tree.xpath('//div[@id="tombstone"]//div[@id="playerSite"]/a/@href')
 	position_raw = tree.xpath('//div[@id="tombstone"]/div/div/span/text()')
 	twitter_raw = tree.xpath('//div[@id="tombstone"]/div/table/tr/td/a/@href')
+	team_pos_raw = tree.xpath('//div[@id="tombstone"]/div/div[@style="float: left; margin-left: 6px; font-weight: bold; color: #999;"]')
+
+	team_raw = team_pos_raw[0].xpath ('./a/text()')
+	pos_raw = team_pos_raw[0].xpath ('./span/text()')
 	
 	info_stripped = [x.strip() for x in info_raw]
 
@@ -299,12 +303,22 @@ def tombstone_scraper (tree):
 		temp_player.website = website_raw [0]
 	except IndexError:
 		pass
-	
+
 	try:
 		temp_player.pos = position_raw [0][0]
 	except IndexError:
 		pass
-	
+
+	try:
+		temp_player.current_team = team_raw [0]
+	except IndexError:
+		pass
+
+	try:
+		temp_player.pos = pos_raw [0]
+	except IndexError:
+		pass
+
 	for item in twitter_raw:
 		if item.find ("/ice/draftsearch.htm?team=") != -1:
 			temp_player.draft_yr = item.split ('=') [-1]
@@ -334,7 +348,7 @@ def career_scraper(playerid, pos, rows, season_type):
 					temp.append(temp_item)
 				elif len(item.xpath('./a')) == 1:
 					temp.append(item.xpath('./a/text()')[0])
-				# Playoffs don't have T/OT columns
+				
 				else:
 					try:
 						temp_item = item.xpath('./text()')[0].strip()
@@ -345,6 +359,7 @@ def career_scraper(playerid, pos, rows, season_type):
 
 					except IndexError:
 						temp.append (None)
+					# Playoffs don't have T/OT columns
 					if len (temp) == 7 and season_type == 1 and pos == 'G':
 						temp.append (None)
 						temp.append (None)
@@ -409,13 +424,14 @@ def create_seasons_playoffs_table():
 if __name__ == '__main__':
 	# all_players_scraper()
 	# active_players_scraper()
-
+	'''
 	create_seasons_playoffs_table()
 
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
 	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471678,))
 	temp_return = c.fetchone()
+	print temp_return
 	conn.commit ()
 	conn.close()
 
@@ -423,4 +439,36 @@ if __name__ == '__main__':
 	playerid, pos = temp_return[0], temp_return[3]
 
 	playerpage_scraper (playerid, pos)
+	'''
+
+	conn = sqlite3.connect ('nhl.db')
+	c = conn.cursor ()
+	c.execute ('select * from all_players')
+	players = c.fetchall()
+
+	for player in players:
+		playerid = player[0]
+		pos = player [3]
+		if pos == 'LW':
+			update_statement = "UPDATE all_players\
+				SET position = 'L' \
+				WHERE playerid =%s" %playerid
+					
+			c.execute(update_statement)
+		if pos == 'RW':
+			update_statement = "UPDATE all_players\
+				SET position = 'R' \
+				WHERE playerid =%s" %playerid
+					
+			c.execute(update_statement)
+		else:
+			pass
+
+		print update_statement
+
+	conn.commit ()
+	conn.close()
+
+
+
 
