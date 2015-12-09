@@ -16,7 +16,8 @@ from dateutil.parser import parse
 def grabber (season, start_game, finish_game, game_type):
 	'''
 	Grabs all resports for games with game numbers between start_game
-	and finish_game of game_type in season
+	and finish_game of game_type in season from nhl.com and stores them in a
+	local file
 	'''
 
 	destination_path =  "C:/Users/Ruben/Projects/HockeyScraper/Reports/"
@@ -27,15 +28,14 @@ def grabber (season, start_game, finish_game, game_type):
 	saved_counter = 0
 	imported_counter = 0
 
-	# Seeing if season being grabbed has been instantaited and if not, doing so
+	# Seeing if season being grabbed has been instantiated and if not, doing so
 	season_folders = os.listdir (destination_path)
 	
 	if season not in season_folders:
 		new_season_folder_path = destination_path + season + "/"
 		os.mkdir (new_season_folder_path)
 		
-	# Seeing if game reports have been dowloaded, and doing so if they have
-
+	# Seeing if game reports have been dowloaded, and doing so if they have not
 	files_path = destination_path + season + "/"
 	alreadY_saved_files = os.listdir (files_path)
 

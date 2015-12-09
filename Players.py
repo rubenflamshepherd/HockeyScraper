@@ -9,7 +9,9 @@ from random import randint
 
 def all_players_scraper ():
 	'''
-	grab all player + related info off nhl.com and store in database
+	Grab basic information from EVERY player to player in the NHL from
+	nhl.com and store in database 
+	player + related info off nhl.com and store in database
 	'''
 	# Trackinf time it takes function to run
 	start_time = time.time()
@@ -17,35 +19,31 @@ def all_players_scraper ():
 	# Create database, connection and cursor
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
-	
+	'''
 	c.execute ('DROP TABLE IF EXISTS all_players')
 	c.execute(
 		'CREATE TABLE all_players (\
-		playerid INTEGER primary key, first_name TEXT, last_name TEXT,\
-		position TEXT, current_team TEXT, birth_date TEXT,\
-		birth_country TEXT, birth_state TEXT, birth_city TEXT\
+		playerid INTEGER primary key, first_name TEXT,\
+		last_name TEXT, position TEXT, current_team TEXT,\
+		birth_date TEXT, birth_country TEXT, birth_state TEXT,\
+		birth_city TEXT\
 		)'
 	)
-	
-	
-	# variables tracking that db changes: errors/exisiing file, additions
+	'''
+		
+	# variables tracking db changes: errors/exisiing file, additions
 	sql_errors = []
 	sql_additions = 0
 	
-	# string providing letters of first names that we iterate through
-	# helps generate urls
-	
 	# Grabing player ids from all players ever
-	# page_num = 302 # page we start grabbing players from
-	no_results = False # variable for checking that page has results
-	page_num = randint(1,364)
+	page_num = randint(1,370)
 	checked_pages = []
 	
 	#while no_results == False:
-	while len (checked_pages) < 364:
-		page_num = randint(1,364)
+	while len (checked_pages) < 370:
+		page_num = randint(1,370)
 		while page_num in checked_pages:
-			page_num = randint(1,364)
+			page_num = randint(1,370)
 		checked_pages.append (page_num)
 		print checked_pages
 		url = "http://www.nhl.com/ice/playersearch.htm?position=S&pg=%d"%page_num
@@ -56,10 +54,14 @@ def all_players_scraper ():
 		page = requests.get (url)
 		tree = html.fromstring (page.text)
 
-		check = tree.xpath ('//div[@style="padding: 6px; font-weight: bold;"]')
+		# Check to see if page falls inside rage of those containing
+		# part of player info table (364 pages as of 9/12/15)
+		check = tree.xpath (
+			'//div[@style="padding: 6px; font-weight: bold;"]'
+			)
 
 		if len(check) == 1:
-			no_results = True
+			pass
 		else:
 			page_num +=1
 			players = tree.xpath('//table[@class="data playerSearch"]/tbody/tr')
@@ -89,13 +91,15 @@ def all_players_scraper ():
 
 				# Parsing the players current team
 				try:
-					current_team = tags[1].xpath('.//a/text()')[0].rstrip()
+					current_team = tags[1].xpath('.//a/text()')[0]\
+						.rstrip()
 				except IndexError:
 					current_team = None
 
 				# Parsing player birthdate
 				try:
-					birthdate_raw = tags[2].xpath('.//nobr/text()')[0].rstrip()
+					birthdate_raw = tags[2]\
+						.xpath('.//nobr/text()')[0].rstrip()
 					birth_date = parse(birthdate_raw)
 				except IndexError:
 					birth_date = None
@@ -117,13 +121,13 @@ def all_players_scraper ():
 					else:
 						birth_state = None
 
-				# Inserting records into db if they don't already exist
-				insert_statement = "INSERT INTO all_players VALUES (%s,\
-					\"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \"%s\",\
-					\"%s\", \"%s\")"\
+				# Insert records into db if they don't already exist
+				insert_statement = "INSERT INTO all_players VALUES\
+					(%s, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\", \
+					\"%s\",\"%s\", \"%s\")"\
 				%(playerid, first_name, last_name, position,\
-				  current_team, birth_date, birth_country, birth_state,\
-				  birth_city
+				  current_team, birth_date, birth_country,\
+				  birth_state, birth_city
 				  )
 				
 				try:
@@ -131,12 +135,12 @@ def all_players_scraper ():
 					print "ID %s added to db" %playerid
 					sql_additions +=1
 				except sqlite3.IntegrityError:
-					print "ERROR: ID %s already exists in primary key column"\
-						%playerid
+					print "ERROR: ID %s already exists\
+						in primary key column"%playerid
 					sql_errors.append (playerid)
 
 			print url
-		#no_results = True
+		
 	conn.commit ()
 	conn.close()
 
@@ -147,8 +151,8 @@ def all_players_scraper ():
 
 def active_players_scraper ():
 	'''
-	Parse through table of active nhl players on nhl.com and update relevant
-	player records 
+	Parse through table of active nhl players on nhl.com and update
+	records of players present in all_players (db) 
 	'''
 
 	# Tracking time it takes function to run
@@ -162,14 +166,9 @@ def active_players_scraper ():
 	sql_errors = []
 	records_updated = 0
 	
-	# string providing letters of first names that we iterate through
-	# helps generate urls
-	
 	# Grabing player ids from all players ever
-	# page_num = 302 # page we start grabbing players from
 	no_results = False # variable for checking that page has results
 	checked_pages = []
-	
 	
 	for letter in string.ascii_uppercase:
 		page_num = 1
@@ -183,14 +182,18 @@ def active_players_scraper ():
 			page = requests.get (url)
 			tree = html.fromstring (page.text)
 
-			check = tree.xpath ('//div[@style="padding: 6px; font-weight: bold;"]')
+			check = tree.xpath (
+				'//div[@style="padding: 6px; font-weight: bold;"]'
+				)
 			print url
 
 			if len(check) == 1:
 				no_results = True
 			else:				
 				page_num +=1
-				players = tree.xpath('//table[@class="data playerSearch"]/tbody/tr')
+				players = tree.xpath(
+					'//table[@class="data playerSearch"]/tbody/tr'
+					)
 
 				for player in players:
 					tags = player.xpath ('.//td')
@@ -225,7 +228,7 @@ def playerpage_scraper (playerid, pos):
 	'''
 	Grab supplemental information about player from their page on nhl.com
 	Information includes personal details ('tombstone') and season summaries
-	Uses funcs tombstone_scraper and season_scraper
+	Uses funcs tombstone_scraper and career_scraper
 	'''
 
 	# Visit player link and grab xml tags
@@ -452,19 +455,19 @@ def database_update():
 if __name__ == '__main__':
 	# all_players_scraper()
 	# active_players_scraper()
-	'''
+	
 	create_seasons_playoffs_table()
 
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
-	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8471678,))
+	c.execute("SELECT * FROM all_players WHERE playerid = ?", (8473994,))
 	temp_return = c.fetchone()
 	print temp_return
 	conn.commit ()
 	conn.close()
 
-
 	playerid, pos = temp_return[0], temp_return[3]
 
 	playerpage_scraper (playerid, pos)
-	'''
+	
+	
