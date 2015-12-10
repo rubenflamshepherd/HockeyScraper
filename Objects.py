@@ -19,6 +19,22 @@ class Player:
 		+ '\n' + str(self.draft_team) + '\n' + str(self.draft_yr) + '\n' + str(self.draft_rnd)\
 		+ '\n' + str(self.draft_overall) + '\n' + str(self.pos) + '\n' + str(self.twitter)
 
+class Roster:
+	def __init__ (self):
+		self.num = None
+		self.pos = None
+		self.first_name = None
+		self.last_name = None
+		self.A_C = None
+		self.starting = 0
+		self.scratch = 0
+		self.playerid = None
+
+	def __str__ (self):
+
+		return str(self.num) + ' ' + str(self.pos) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + ' '\
+		+ str(self.A_C) + ' ' + str(self.starting) + ' ' + str(self.scratch) + ' ' + str(self.playerid)
+
 class Event:
 
 	def __init__ (self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice):

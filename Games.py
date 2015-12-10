@@ -3,13 +3,13 @@ Save online reports of games to local files
 '''
 
 
-from lxml import html
+from lxml import html, etree
 import sqlite3
 import os
 import requests
 import Operations
 import time
-from Objects import Event
+from Objects import Event, Roster
 from random import randint
 from dateutil.parser import parse
 
@@ -95,7 +95,11 @@ def real_report (tree):
 		return True
 
 
-def game_info_scraper (year, game_num):
+def game_info_extractor (year, game_num):
+	'''
+	Extract information about a game (attendance, home team, etc.)
+	from a play-by-play file stored on a local file 
+	'''
 
 	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
 	with open (file_path, 'r') as temp_file:
@@ -125,7 +129,11 @@ def game_info_scraper (year, game_num):
 	print home_score, home_team, home_team_game_nums
 	
 
-def playbyplay_scraper (year, game_num):
+def playbyplay_extractor (year, game_num):
+	"""
+	Extract play-by-play information from a html file on the
+	local machine (in the form of events)
+	"""
 	
 	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
 	with open (file_path, 'r') as temp_file:
@@ -180,10 +188,100 @@ def playbyplay_scraper (year, game_num):
 	    
 	    events.append (event)	    
 	return events
+
+def game_personel_creator (year, game_num):
+	"""
+	Extract roster information from a html file on the
+	local machine and create database entries
+	"""
+	
+	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/RO02" + game_num + ".HTM"
+
+	with open (file_path, 'r') as temp_file:
+		read_data = temp_file.read()
+
+	tree = html.fromstring(read_data)
+
+	tables = tree.xpath('//table//table//table//table')
+
+	visitor_roster = ind_roster_grabber (tables, 'visitor')
+	home_roster = ind_roster_grabber (tables, 'home')
+		
+def ind_roster_grabber (tree, team):
+	"""
+	Extract indivudal information from a xml tree and return list 
+	of roster objects
+	"""
+	roster_objects = []
+
+	if team == 'home':
+		x, y = 6, 8
+	else:
+		x, y = 5, 7
+
+	# Skipping first item in iterable roster
+	iter_roster = iter(tree[x].xpath('./tr'))
+	next (iter_roster)
+
+	for item in iter_roster:
+		temp_player = Roster()
+
+		temp_player.num = item.xpath('./td/text()')[0]
+		temp_player.pos = item.xpath('./td/text()')[1]
+		temp_name_raw = item.xpath('./td/text()')[2]
+
+		temp_starting = item.xpath ('./td/@class')[0]
+		if 'bold' in temp_starting:
+			temp_player.starting = 1
+			
+		temp_name_raw_split = temp_name_raw.split()
+		temp_player.first_name = temp_name_raw_split[0]
+
+		if '(A)' in temp_name_raw_split:
+			temp_player.A_C = 'A'
+			temp_name_raw_split.pop (-1)
+		elif '(C)' in temp_name_raw_split:
+			temp_player.A_C = 'C'
+			temp_name_raw_split.pop (-1)
+
+		temp_player.last_name = " ".join(temp_name_raw_split[1:])
+
+		print temp_player
+		roster_objects.append(temp_player)
+		#print etree.tostring (item, pretty_print = True)
+
+	iter_scratches = iter(tree[y].xpath('./tr'))
+	next (iter_scratches)
+
+	for item in iter_scratches:
+		temp_player = Roster()
+
+		temp_player.scratch = 1
+		temp_player.num = item.xpath('./td/text()')[0]
+		temp_player.pos = item.xpath('./td/text()')[1]
+		temp_name_raw = item.xpath('./td/text()')[2]
+
+		temp_name_raw_split = temp_name_raw.split()
+		temp_player.first_name = temp_name_raw_split[0]
+		temp_player.last_name = " ".join(temp_name_raw_split[1:])
+
+		print temp_player
+		roster_objects.append(temp_player)
+
+	return roster_objects
+
+
+	
+	'''
+	for item in tree.xpath('//table//table//table//table'):
+	    event_raw = item.xpath('./td/text()')
+	    print etree.tostring (item, pretty_print = True)
+	'''
+
 	
 
 if __name__ == '__main__':
-	grabber ("20142015", 1, 110, '02')
+	# grabber ("20142015", 1, 110, '02')
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
 	#game_info_scraper ("20142015", "0001")
 	'''
@@ -191,4 +289,7 @@ if __name__ == '__main__':
 	for x in range (0,20):
 		print events[x]
 	'''
+
+	game_personel_creator ("20142015", "0001")
+	
 
