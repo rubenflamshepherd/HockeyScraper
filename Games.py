@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach
+from Objects import Event, Roster, Coach, Referee, Linesman
 from random import randint
 from dateutil.parser import parse
 
@@ -225,7 +225,10 @@ def game_personel_creator (year, game_num):
 
 	away_roster = ind_roster_grabber (tables, 'visitor')
 	home_roster = ind_roster_grabber (tables, 'home')
+	
 	away_coach, home_coach = coach_grabber(tables)
+
+	officials_grabber (tables)
 
 def coach_grabber (tree):
 	'''
@@ -239,6 +242,35 @@ def coach_grabber (tree):
 	home_coach = Coach(home_coach_raw.split()[0], " ".join(home_coach_raw.split()[1:]))
 
 	return away_coach, home_coach
+
+def officials_grabber (tree):
+	'''
+	Grab referees and linesmen from roster html file and return them as 
+	Coach objects
+	'''
+
+	officials_raw = tree[11].xpath('./tr/td//tr/td/text()')
+
+	assert len(officials_raw) == 4, "ERROR: 4 Official not present"
+
+	referees = []
+	linesmen = []
+
+	for index, official_raw in enumerate(officials_raw):
+		official = official_raw.split()
+		num = official[0].strip('#')
+		first_name = official[1]
+		last_name = " ".join(official[2:])
+		if index < 2:
+			temp_official = Referee (num, first_name, last_name)
+			referees.append (temp_official)
+		else:
+			temp_official = Linesman (num, first_name, last_name)
+			linesmen.append (temp_official)
+		# print temp_official
+
+	return referees, linesmen
+
 	
 		
 def ind_roster_grabber (tree, team):

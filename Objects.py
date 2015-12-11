@@ -7,6 +7,21 @@ class Coach:
 
 		return str(self.first_name) + ' ' + str(self.last_name)
 
+class Official:
+	def __init__ (self, num, first_name, last_name):
+		self.num = num
+		self.first_name = first_name
+		self.last_name = last_name
+
+class Referee (Official):
+	def __str__ (self):
+
+		return "Referee: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name)
+
+class Linesman (Official):
+	def __str__ (self):
+
+		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name)
 class Player:
 	def __init__ (self):
 		self.num = None
