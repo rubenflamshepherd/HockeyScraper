@@ -232,11 +232,12 @@ def game_personel_creator (year, game_num):
 
 def coach_grabber (tree):
 	'''
-	Grab away and home coaches from roster html file and return them as 
-	Coach objects
+	Grab away and home coaches from xml tree (of html roster report) and
+	return them as Coach objects
 	'''
 	away_coach_raw = tree[9].xpath('./tr/td/text()')[0]
-	away_coach = Coach(away_coach_raw.split()[0], " ".join(away_coach_raw.split()[1:]))
+	away_coach = Coach(
+		first_name = away_coach_raw.split()[0], " ".join(away_coach_raw.split()[1:]))
 
 	home_coach_raw = tree[10].xpath('./tr/td/text()')[0]
 	home_coach = Coach(home_coach_raw.split()[0], " ".join(home_coach_raw.split()[1:]))
@@ -251,7 +252,7 @@ def officials_grabber (tree):
 
 	officials_raw = tree[11].xpath('./tr/td//tr/td/text()')
 
-	assert len(officials_raw) == 4, "ERROR: 4 Official not present"
+	assert len(officials_raw) == 4, "ERROR: 4 Officials not present"
 
 	referees = []
 	linesmen = []
