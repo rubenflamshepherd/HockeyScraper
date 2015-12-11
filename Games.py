@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster
+from Objects import Event, Roster, Coach
 from random import randint
 from dateutil.parser import parse
 
@@ -189,13 +189,32 @@ def playbyplay_extractor (year, game_num):
 	    events.append (event)	    
 	return events
 
+def get_playerid(first_name, last_name):
+	'''
+	given a player's first name and last name, find their playerid in db
+	'''
+
+	conn = sqlite3.connect ('nhl.db')
+	c = conn.cursor ()
+	c.execute("SELECT * FROM all_players WHERE first_name = ? AND last_name = ?",\
+		(first_name, last_name,))
+	temp_return = c.fetchall()
+
+	assert len(temp_return) == 1, "ERROR: more than one player with that first/last name combo"
+	
+	conn.commit ()
+	conn.close()
+
+	return temp_return [0][0]
+
 def game_personel_creator (year, game_num):
 	"""
 	Extract roster information from a html file on the
 	local machine and create database entries
 	"""
 	
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/RO02" + game_num + ".HTM"
+	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" +\
+					year + "/RO02" + game_num + ".HTM"
 
 	with open (file_path, 'r') as temp_file:
 		read_data = temp_file.read()
@@ -204,13 +223,28 @@ def game_personel_creator (year, game_num):
 
 	tables = tree.xpath('//table//table//table//table')
 
-	visitor_roster = ind_roster_grabber (tables, 'visitor')
+	away_roster = ind_roster_grabber (tables, 'visitor')
 	home_roster = ind_roster_grabber (tables, 'home')
+	away_coach, home_coach = coach_grabber(tables)
+
+def coach_grabber (tree):
+	'''
+	Grab away and home coaches from roster html file and return them as 
+	Coach objects
+	'''
+	away_coach_raw = tree[9].xpath('./tr/td/text()')[0]
+	away_coach = Coach(away_coach_raw.split()[0], " ".join(away_coach_raw.split()[1:]))
+
+	home_coach_raw = tree[10].xpath('./tr/td/text()')[0]
+	home_coach = Coach(home_coach_raw.split()[0], " ".join(home_coach_raw.split()[1:]))
+
+	return away_coach, home_coach
+	
 		
 def ind_roster_grabber (tree, team):
 	"""
 	Extract indivudal information from a xml tree and return list 
-	of roster objects
+	of roster objects. team is home or away
 	"""
 	roster_objects = []
 
@@ -246,7 +280,9 @@ def ind_roster_grabber (tree, team):
 
 		temp_player.last_name = " ".join(temp_name_raw_split[1:])
 
-		print temp_player
+		temp_player.playerid = get_playerid (temp_player.first_name, temp_player.last_name)
+
+		# print temp_player
 		roster_objects.append(temp_player)
 		#print etree.tostring (item, pretty_print = True)
 
@@ -265,7 +301,9 @@ def ind_roster_grabber (tree, team):
 		temp_player.first_name = temp_name_raw_split[0]
 		temp_player.last_name = " ".join(temp_name_raw_split[1:])
 
-		print temp_player
+		temp_player.playerid = get_playerid (temp_player.first_name, temp_player.last_name)
+
+		# print temp_player
 		roster_objects.append(temp_player)
 
 	return roster_objects

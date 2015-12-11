@@ -431,23 +431,17 @@ def database_update():
 
 	for player in players:
 		playerid = player[0]
-		pos = player [3]
-		if pos == 'LW':
-			update_statement = "UPDATE all_players\
-				SET position = 'L' \
-				WHERE playerid =%s" %playerid
-					
-			c.execute(update_statement)
-		if pos == 'RW':
-			update_statement = "UPDATE all_players\
-				SET position = 'R' \
-				WHERE playerid =%s" %playerid
-					
-			c.execute(update_statement)
-		else:
-			pass
+		first_name = player[1]
+		last_name = player[2]
+		update_statement = "UPDATE all_players\
+							SET first_name = ?, last_name = ? \
+							WHERE playerid = ?"
 
-		print update_statement
+		print (first_name.upper(), last_name.upper(), playerid,)
+					
+		c.execute(update_statement, (first_name.upper(), last_name.upper(), playerid,))
+		#print update_statement
+	
 
 	conn.commit ()
 	conn.close()
@@ -456,7 +450,9 @@ if __name__ == '__main__':
 	# all_players_scraper()
 	# active_players_scraper()
 	
-	create_seasons_playoffs_table()
+	# create_seasons_playoffs_table()
+	database_update()
+	'''
 
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
@@ -469,5 +465,5 @@ if __name__ == '__main__':
 	playerid, pos = temp_return[0], temp_return[3]
 
 	playerpage_scraper (playerid, pos)
-	
+	'''
 	
