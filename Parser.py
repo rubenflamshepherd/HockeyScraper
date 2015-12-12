@@ -356,6 +356,8 @@ if __name__ == '__main__':
 	for x in range (0,20):
 		print events[x]
 		print event_decription_extractor (events[x])
+		print events[x].away_on_ice
+		print events[x].home_on_ice
 	
 
 	# game_personel_creator ("20142015", "0001")
