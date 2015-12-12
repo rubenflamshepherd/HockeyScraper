@@ -76,3 +76,38 @@ class Event:
 		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
 		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
 		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')
+
+class PeriodStart(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					start_time, time_zone):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.start_time = start_time
+		self.time_zone = time_zone
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
+		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
+		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8') + '\nPeriod start: ' +\
+		 self.start_time.encode('utf-8') + '\nTime zone:' + self.time_zone.encode('utf-8')
+
+class FaceOff(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, winning_player, losing_player, winning_team, losing_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.winning_player = winning_player
+		self.losing_player = losing_player
+		self.winning_team = winning_team
+		self.losing_team = losing_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
+		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
+		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8') + \
+		 '\nZone: ' + self.zone.encode('utf-8') + \
+		 '\nWP: ' + self.winning_player[0].encode('utf-8') + ' ' + self.winning_player[1].encode('utf-8') + \
+		 '\nLP: ' + self.losing_player[0].encode('utf-8') + ' ' + self.losing_player[1].encode('utf-8') + \
+		 '\nWT: ' + self.winning_team.encode('utf-8') + \
+		 '\nLT: ' + self.losing_team.encode('utf-8')

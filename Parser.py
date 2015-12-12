@@ -8,7 +8,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff
 from random import randint
 from dateutil.parser import parse
 
@@ -105,6 +105,74 @@ def playbyplay_extractor (year, game_num):
 	    
 	    events.append (event)	    
 	return events
+
+def event_decription_extractor(event):
+	'''
+	Given a string that is the discritpion of an event, return an object of
+	that event containing all possible data
+	'''
+	
+	description_raw = event.description.split ()
+
+	if event.event_type == 'PSTR':
+		
+		start_time = description_raw[-2]
+		time_zone = description_raw[-1]
+		
+		return PeriodStart(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			start_time,
+			time_zone
+			)
+	elif event.event_type == 'FAC':
+		
+		zone = description_raw[2]
+		winning_team = description_raw[0]
+
+		anchor = description_raw.index('vs')
+
+		away_team = description_raw[5]
+		away_num = description_raw[6].strip('#')
+		away_name = " ".join(description_raw[7:anchor])
+
+		home_team = description_raw[anchor + 1]
+		home_num = description_raw[anchor + 2].strip('#')
+		home_name = " ".join(description_raw[anchor + 3:])
+
+		if winning_team == away_team:
+			losing_team = home_team
+			winning_player = (away_num, away_name)
+			losing_player = (home_num, home_name)
+		else:
+			losing_team = away_team
+			winning_player = (home_num, home_name)
+			losing_player = (away_num, away_name)
+
+		return FaceOff(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			winning_player,\
+			losing_player,\
+			winning_team,\
+			losing_team
+			)
+
+
+
 
 def get_playerid(first_name, last_name):
 	'''
@@ -283,12 +351,13 @@ if __name__ == '__main__':
 	# grabber ("20142015", 1, 110, '02')
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
 	#game_info_scraper ("20142015", "0001")
-	'''
-	events = playbyplay_scraper ("20142015", "0001")
+	
+	events = playbyplay_extractor ("20142015", "0001")
 	for x in range (0,20):
 		print events[x]
-	'''
+		print event_decription_extractor (events[x])
+	
 
-	game_personel_creator ("20142015", "0001")
+	# game_personel_creator ("20142015", "0001")
 	
 
