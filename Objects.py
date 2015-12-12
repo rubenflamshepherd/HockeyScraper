@@ -153,3 +153,26 @@ class Shot(Event):
 		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
 		 + '\nST: ' + self.shooting_team.encode('utf-8')\
 		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+class Block(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, shot_type, shooting_player, blocking_player, shooting_team, blocking_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.shot_type = shot_type
+		self.shooting_player = shooting_player
+		self.blocking_player = blocking_player
+		self.shooting_team = shooting_team
+		self.blocking_team = blocking_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
+		 + '\nSP: ' + self.shooting_player[0].encode('utf-8') + ' ' + self.shooting_player[1].encode('utf-8')\
+		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
+		 + '\nST: ' + self.shooting_team.encode('utf-8')\
+		 + '\nBT: ' + self.blocking_team.encode('utf-8')
