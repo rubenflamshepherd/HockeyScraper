@@ -8,7 +8,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo
 from random import randint
 from dateutil.parser import parse
 
@@ -26,12 +26,12 @@ def game_info_extractor (year, game_num):
 	
 	away_info_raw = tree.xpath('//tr/td[@valign="top"]/table[@id="Visitor"]')[0]
 	away_score = away_info_raw.xpath('.//td[@style="font-size: 40px;font-weight:bold"]/text()')[0]
-	away_team = away_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
+	away_team_raw = away_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
 	away_team_game_nums = away_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[1]
 
 	home_info_raw = tree.xpath('//tr/td[@valign="top"]/table[@id="Home"]')[0]
 	home_score = home_info_raw.xpath('.//td[@style="font-size: 40px;font-weight:bold"]/text()')[0]
-	home_team = home_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
+	home_team_raw = home_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
 	home_team_game_nums = home_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[1]
 
 	game_info_raw = tree.xpath('//tr/td/table[@id="GameInfo"]')[0]
@@ -40,11 +40,19 @@ def game_info_extractor (year, game_num):
 	game_start_end = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[2]
 	game_num = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[3]
 	report_type = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[4]
-	
+
+	away_team = Operations.team_name_to_acronym (away_team_raw)
+	home_team = Operations.team_name_to_acronym (home_team_raw)
+
 	print game_date, attendance_arena, game_start_end, game_num, report_type
 	print away_score, away_team, away_team_game_nums
 	print home_score, home_team, home_team_game_nums
-	
+
+	return GameInfo (
+		game_date, attendance_arena, game_start_end, game_num,\
+		away_score, away_team, away_team_game_nums,\
+		home_score, home_team, home_team_game_nums
+		)
 
 def playbyplay_extractor (year, game_num):
 	"""
@@ -106,7 +114,7 @@ def playbyplay_extractor (year, game_num):
 	    events.append (event)	    
 	return events
 
-def event_decription_extractor(event):
+def event_decription_extractor(event, away_team, home_team):
 	'''
 	Given a string that is the discritpion of an event, return an object of
 	that event containing all possible data
@@ -171,6 +179,53 @@ def event_decription_extractor(event):
 			losing_team
 			)
 
+	elif event.event_type == 'SHOT':
+		
+		zone = description_raw[-4]
+		distance = description_raw[-2]
+		shot_type = description_raw[-5]
+		shooting_team = description_raw[0]
+		shooting_num = description_raw[3].strip('#')
+
+		anchor = Operations.index_containing_substring(description_raw, ',') + 1
+
+		assert anchor != 0, "ERROR - Anchor not found"
+
+		shooting_name = " ".join(description_raw[4:anchor])
+
+		shooting_player = (shooting_num, shooting_name)
+
+		if shooting_team == away_team:
+			blocking_on_ice = event.home_on_ice
+			blocking_team = home_team
+		elif shooting_team == home_team:
+			blocking_on_ice = event.away_on_ice
+			blocking_team = away_team
+			
+		for player in blocking_on_ice:
+			if player[0] == 'Goalie':
+				blocking_name = " ".join(player[1].split()[1:])
+				blocking_num = player[2]
+
+		blocking_player = (blocking_num, blocking_name)
+
+		return Shot(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			shot_type,\
+			distance,\
+			shooting_player,\
+			blocking_player,\
+			shooting_team,\
+			blocking_team
+			)
 
 
 
@@ -272,7 +327,7 @@ def officials_grabber (tree):
 		
 def ind_roster_grabber (tree, team):
 	"""
-	Extract indivudal information from a xml tree and return list 
+	Extract indivudal information from an xml tree and return list 
 	of roster objects. team is home or away
 	"""
 	roster_objects = []
@@ -351,13 +406,14 @@ if __name__ == '__main__':
 	# grabber ("20142015", 1, 110, '02')
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
 	#game_info_scraper ("20142015", "0001")
-	
+
+	gameinfo_temp = game_info_extractor	("20142015", "0001")
 	events = playbyplay_extractor ("20142015", "0001")
-	for x in range (0,20):
+	for x in range (0,35):
 		print events[x]
-		print event_decription_extractor (events[x])
-		print events[x].away_on_ice
-		print events[x].home_on_ice
+		print event_decription_extractor (events[x], gameinfo_temp.away_team, gameinfo_temp.home_team)
+		#print events[x].away_on_ice
+		#print events[x].home_on_ice
 	
 
 	# game_personel_creator ("20142015", "0001")
