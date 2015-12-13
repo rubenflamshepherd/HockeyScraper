@@ -1,11 +1,27 @@
+class GamePersonnel(object):
+	def __init__ (self, away_roster, home_roster, away_coach, home_coach, referees, linesmen):
+		self.away_roster = away_roster
+		self.home_roster = home_roster
+		self.away_coach = away_coach
+		self.home_coach = home_coach
+		self.referees = referees
+		self.linesmen = linesmen
+
+	def __str__ (self):
+		return 'Away Coach: ' + self.away_coach.full_name()\
+			+ '\nHome Coach: ' + self.home_coach.full_name()\
+
 class Coach:
 	def __init__ (self, first_name, last_name):
 		self.first_name = first_name
 		self.last_name = last_name
 
+	def full_name (self):
+		return self.first_name + ' ' + self.last_name
+
 	def __str__ (self):
 
-		return str(self.first_name) + ' ' + str(self.last_name)
+		return self.full_name()
 
 class Official:
 	def __init__ (self, num, first_name, last_name):
@@ -224,3 +240,24 @@ class Hit(Event):
 		 + '\nHitP: ' + self.hit_player[0].encode('utf-8') + ' ' + self.hit_player[1].encode('utf-8')\
 		 + '\nHittingT: ' + self.hitting_team.encode('utf-8')\
 		 + '\nHitT: ' + self.hit_team.encode('utf-8')
+
+class Stop(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					description_parsed, stopping_player, stopping_team, tv_timeout, timeout_caller):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.description_parsed = description_parsed
+		self.stopping_player = stopping_player
+		self.stopping_team = stopping_team
+		self.tv_timeout = tv_timeout
+		self.timeout_caller = timeout_caller
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nDESCR Parsed: ' + self.description_parsed.encode('utf-8')\
+		 + '\nST: ' + str(self.stopping_team)\
+		 + '\nSP: ' + str(self.stopping_player[0]) + ' ' + str(self.stopping_player[1])\
+		 + '\nTVTO: ' + str(self.tv_timeout)\
+		 + '\nTO Caller: ' + str(self.timeout_caller)

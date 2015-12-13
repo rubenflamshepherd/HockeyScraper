@@ -1,7 +1,7 @@
 def team_responsible(winning_zone, winning_team, away_team, home_team, event):
 	'''
 	Given an event (icing, goalie stoppage, etc.) that results in an faceoff
-	in an offending teams zone,	descern the team responsbile and return 
+	in an offending teams zone,	discern the team responsible and return 
 	them (as 3 letter acronym) and their on ice players
 	'''
 	if winning_zone == "Def.":

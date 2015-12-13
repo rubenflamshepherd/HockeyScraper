@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop
 from random import randint
 from dateutil.parser import parse
 
@@ -115,9 +115,9 @@ def playbyplay_extractor (year, game_num):
 	    events.append (event)	    
 	return events
 
-def event_object_extractor(event_index, event_list, away_team, home_team):
+def event_object_extractor(event_index, event_list, game_personnel, away_team, home_team):
 	'''
-	Given a string that is the discritpion of an event, return an object of
+	Given a string that is the description of an event, return an object of
 	that event containing all possible data
 	'''
 	event = event_list[event_index]
@@ -357,36 +357,77 @@ def event_object_extractor(event_index, event_list, away_team, home_team):
 			)
 
 	elif event.event_type == 'STOP':
+		stopping_player = (None, None)
+		stopping_team = None
+		tv_timeout = 0
+		timeout_caller = None
 
 		description_raw = re.split('\W+', event.description)
-		print description_raw
+		description_parsed = " ".join(description_raw)
 		
-		if description_raw[0] == "GOALIE":
+		# Parse out 'TV TIMEOUT if not only item'
+		if 'TV' in description_raw:
+			tv_timeout = 1
+			if len(description_raw) != 2:
+				index = description_raw.index("TV")
+				description_raw.pop (index)
+				description_raw.pop (index)
+				description_parsed = " ".join(description_raw)
+
+		if 'HOME' in description_raw:
+			timeout_caller = game_personnel.home_coach.full_name()
+		elif 'VISITOR' in description_raw:
+			timeout_caller = game_personnel.away_coach.full_name()
+		
+		if "GOALIE" in description_raw or 'FROZEN' in description_raw:
 			next_event = event_list[event_index + 1]
+
+			# Sometimes shot causing the stoppage is logged after the stoppage
+			if next_event.event_type != 'FAC':
+				next_event = event_list[event_index + 2]
+
+			assert next_event.event_type == 'FAC', "ERROR: Event after STOP is not a FAC"
+			
 			next_description_raw = next_event.description.split ()
 			winning_team = next_description_raw[0]
 			winning_zone = next_description_raw[2]
 
 			stopping_team, stopping_on_ice = Operations.team_responsible(
-				winning_zone, winning_team, away_team, home_team, next_event
+				winning_zone, winning_team, away_team, home_team, event
 				)
 
 			for player in stopping_on_ice:
 				if player[0] == 'Goalie':
 					stopping_name = " ".join(player[1].split()[1:])
 					stopping_num = player[2]
+					stopping_player = (stopping_num, stopping_name)
 
-		elif description_raw[0] == "ICING":
+
+		elif "ICING" in description_raw:
 			next_event = event_list[event_index + 1]
 			next_description_raw = next_event.description.split ()
 			winning_team = next_description_raw[0]
 			winning_zone = next_description_raw[2]
 
 			stopping_team, stopping_on_ice = Operations.team_responsible(
-				winning_zone, winning_team, away_team, home_team, next_event
+				winning_zone, winning_team, away_team, home_team, event
 				)
 
-
+		return Stop(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			description_parsed,\
+			stopping_player,\
+			stopping_team,\
+			tv_timeout,\
+			timeout_caller
+			)
 
 def get_playerid(first_name, last_name):
 	'''
@@ -406,7 +447,7 @@ def get_playerid(first_name, last_name):
 
 	return temp_return [0][0]
 
-def game_personel_creator (year, game_num):
+def game_personnel_creator (year, game_num):
 	"""
 	Extract roster information from a html file on the
 	local machine and create database entries
@@ -427,7 +468,9 @@ def game_personel_creator (year, game_num):
 	
 	away_coach, home_coach = coach_grabber(tables)
 	
-	officials_grabber (tables)
+	referees, linesmen = officials_grabber (tables)
+
+	return GamePersonnel (away_roster, home_roster, away_coach, home_coach, referees, linesmen)
 
 def coach_grabber (tree):
 	'''
@@ -565,11 +608,14 @@ if __name__ == '__main__':
 	#game_info_scraper ("20142015", "0001")
 
 	gameinfo_temp = game_info_extractor	("20152016", "0001")
+	gamepersonnel_temp = game_personnel_creator ("20152016", "0001")
+	print gamepersonnel_temp
 	events = playbyplay_extractor ("20152016", "0001")
 	
-	for x in range (0,65):
+	for x in range (0,324):
 		#print events[x]
-		event_object_extractor (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team)
+		if events[x].event_type == 'STOP':
+			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
