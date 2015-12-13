@@ -1,3 +1,27 @@
+def team_responsible(winning_zone, winning_team, away_team, home_team, event):
+	'''
+	Given an event (icing, goalie stoppage, etc.) that results in an faceoff
+	in an offending teams zone,	descern the team responsbile and return 
+	them (as 3 letter acronym) and their on ice players
+	'''
+	if winning_zone == "Def.":
+		if winning_team == home_team:
+			stopping_team = home_team
+			stopping_on_ice = event.home_on_ice
+		elif winning_team == away_team:
+			stopping_team = away_team
+			stopping_on_ice = event.away_on_ice
+	else:
+		if winning_team == home_team:
+			stopping_team = away_team
+			stopping_on_ice = event.away_on_ice
+		elif winning_team == away_team:
+			stopping_team = home_team
+			stopping_on_ice = event.home_on_ice
+
+	return stopping_team, stopping_on_ice
+
+
 def team_name_to_acronym (team_name):
 	'''
 	given a team name, return the three letter acronym for that team 

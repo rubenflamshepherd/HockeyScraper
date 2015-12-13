@@ -1,6 +1,8 @@
 '''
 Save online html reports of games to local files
 '''
+import Operations
+from lxml import html, etree
 import os
 from random import randint
 import requests
@@ -45,8 +47,9 @@ def grabber (season, start_game, finish_game, game_type):
 			else:
 				report = requests.get(url)
 				tree = html.fromstring (report.text)
-
-				if real_report:
+				check = tree.xpath ('//head/title/text()')
+				
+				if check != ['404 Not Found']:
 					temp_file = open (files_path + file_name, 'w')
 					temp_file.write (report.text)
 					temp_file.close()
@@ -71,3 +74,6 @@ def grabber (season, start_game, finish_game, game_type):
 	print "The following reports were not found: "
 	for item in not_found_urls:
 		print item
+
+if __name__ == '__main__':
+	grabber ('20152016', 1, 20, '02')

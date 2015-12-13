@@ -3,6 +3,7 @@ Parse information from html reports stored as local files using xml trees
 '''
 
 from lxml import html, etree
+import re
 import sqlite3
 import os
 import requests
@@ -355,6 +356,36 @@ def event_object_extractor(event_index, event_list, away_team, home_team):
 			hit_team
 			)
 
+	elif event.event_type == 'STOP':
+
+		description_raw = re.split('\W+', event.description)
+		print description_raw
+		
+		if description_raw[0] == "GOALIE":
+			next_event = event_list[event_index + 1]
+			next_description_raw = next_event.description.split ()
+			winning_team = next_description_raw[0]
+			winning_zone = next_description_raw[2]
+
+			stopping_team, stopping_on_ice = Operations.team_responsible(
+				winning_zone, winning_team, away_team, home_team, next_event
+				)
+
+			for player in stopping_on_ice:
+				if player[0] == 'Goalie':
+					stopping_name = " ".join(player[1].split()[1:])
+					stopping_num = player[2]
+
+		elif description_raw[0] == "ICING":
+			next_event = event_list[event_index + 1]
+			next_description_raw = next_event.description.split ()
+			winning_team = next_description_raw[0]
+			winning_zone = next_description_raw[2]
+
+			stopping_team, stopping_on_ice = Operations.team_responsible(
+				winning_zone, winning_team, away_team, home_team, next_event
+				)
+
 
 
 def get_playerid(first_name, last_name):
@@ -519,8 +550,6 @@ def ind_roster_grabber (tree, team):
 		roster_objects.append(temp_player)
 
 	return roster_objects
-
-
 	
 	'''
 	for item in tree.xpath('//table//table//table//table'):
@@ -535,12 +564,12 @@ if __name__ == '__main__':
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
 	#game_info_scraper ("20142015", "0001")
 
-	gameinfo_temp = game_info_extractor	("20142015", "0001")
-	events = playbyplay_extractor ("20142015", "0001")
+	gameinfo_temp = game_info_extractor	("20152016", "0001")
+	events = playbyplay_extractor ("20152016", "0001")
 	
-	for x in range (0,10):
-		print events[x]
-		print event_object_extractor (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team)
+	for x in range (0,65):
+		#print events[x]
+		event_object_extractor (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
