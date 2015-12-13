@@ -8,7 +8,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit
 from random import randint
 from dateutil.parser import parse
 
@@ -114,12 +114,13 @@ def playbyplay_extractor (year, game_num):
 	    events.append (event)	    
 	return events
 
-def event_decription_extractor(event, away_team, home_team):
+def event_object_extractor(event_index, event_list, away_team, home_team):
 	'''
 	Given a string that is the discritpion of an event, return an object of
 	that event containing all possible data
 	'''
-	
+	event = event_list[event_index]
+
 	description_raw = event.description.split ()
 
 	if event.event_type == 'PSTR':
@@ -183,7 +184,7 @@ def event_decription_extractor(event, away_team, home_team):
 		
 		zone = description_raw[-4]
 		distance = description_raw[-2]
-		shot_type = description_raw[-5]
+		shot_type = description_raw[-5].strip(',')
 		shooting_team = description_raw[0]
 		shooting_num = description_raw[3].strip('#')
 
@@ -230,7 +231,7 @@ def event_decription_extractor(event, away_team, home_team):
 	elif event.event_type == 'BLOCK':
 		
 		zone = description_raw[-2]
-		shot_type = description_raw[-3]
+		shot_type = description_raw[-3].strip(',')
 		shooting_team = description_raw[0]
 		shooting_num = description_raw[1].strip('#')
 
@@ -264,6 +265,94 @@ def event_decription_extractor(event, away_team, home_team):
 			blocking_player,\
 			shooting_team,\
 			blocking_team
+			)
+
+	elif event.event_type == 'MISS':
+		
+		distance = description_raw[-2]
+		zone = description_raw[-4]
+		shot_type = description_raw[-8].strip(',')
+		shooting_team = description_raw[0]
+		shooting_num = description_raw[1].strip('#')
+
+		anchor = Operations.index_containing_substring(description_raw, ',') + 1
+		
+		assert anchor != 0, "ERROR - Anchor not found"
+
+		miss_type = (" ".join(description_raw[anchor + 1:-4])).strip(',')
+
+		shooting_name = (" ".join(description_raw[2:anchor])).strip(',')
+
+		shooting_player = (shooting_num, shooting_name)
+
+		if shooting_team == away_team:
+			blocking_on_ice = event.home_on_ice
+			blocking_team = home_team
+		elif shooting_team == home_team:
+			blocking_on_ice = event.away_on_ice
+			blocking_team = away_team
+			
+		for player in blocking_on_ice:
+			if player[0] == 'Goalie':
+				blocking_name = " ".join(player[1].split()[1:])
+				blocking_num = player[2]
+
+		blocking_player = (blocking_num, blocking_name)
+
+		return Miss(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			shot_type,\
+			miss_type,\
+			distance,\
+			shooting_player,\
+			blocking_player,\
+			shooting_team,\
+			blocking_team
+			)
+
+	elif event.event_type == 'HIT':
+		
+		zone = description_raw[-2]
+		hitting_team = description_raw[0]
+		hitting_num = description_raw[1].strip('#')
+
+		anchor1 = Operations.index_containing_substring(description_raw, 'HIT')
+		anchor2 = Operations.index_containing_substring(description_raw, ',') + 1
+
+		assert anchor1 != 0 and anchor2 != 0, "ERROR - Anchor not found"
+
+		hitting_name = " ".join(description_raw[2:anchor1])
+
+		hitting_player = (hitting_num, hitting_name)
+
+		hit_team = description_raw[anchor1 + 1]
+		hit_num = description_raw[anchor1 + 2].strip('#')
+		hit_name = (" ".join(description_raw[anchor1 + 3: anchor2])).strip (',')
+
+		hit_player = (hit_num, hit_name)
+
+		return Hit(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			hitting_player,\
+			hit_player,\
+			hitting_team,\
+			hit_team
 			)
 
 
@@ -448,13 +537,13 @@ if __name__ == '__main__':
 
 	gameinfo_temp = game_info_extractor	("20142015", "0001")
 	events = playbyplay_extractor ("20142015", "0001")
-	for x in range (0,45):
+	
+	for x in range (0,10):
 		print events[x]
-		print event_decription_extractor (events[x], gameinfo_temp.away_team, gameinfo_temp.home_team)
+		print event_object_extractor (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
-
+	
 	# game_personel_creator ("20142015", "0001")
 	
-

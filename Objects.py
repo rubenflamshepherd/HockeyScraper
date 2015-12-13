@@ -176,3 +176,51 @@ class Block(Event):
 		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
 		 + '\nST: ' + self.shooting_team.encode('utf-8')\
 		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+class Miss(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, shot_type, miss_type, distance, shooting_player, blocking_player, shooting_team, blocking_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.shot_type = shot_type
+		self.miss_type = miss_type
+		self.distance = distance
+		self.shooting_player = shooting_player
+		self.blocking_player = blocking_player
+		self.shooting_team = shooting_team
+		self.blocking_team = blocking_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
+		 + '\nMiss type: ' + self.miss_type.encode('utf-8')\
+		 + '\nDistance: ' + self.distance.encode('utf-8')\
+		 + '\nSP: ' + self.shooting_player[0].encode('utf-8') + ' ' + self.shooting_player[1].encode('utf-8')\
+		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
+		 + '\nST: ' + self.shooting_team.encode('utf-8')\
+		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+class Hit(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, hitting_player, hit_player, hitting_team, hit_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.hitting_player = hitting_player
+		self.hit_player = hit_player
+		self.hitting_team = hitting_team
+		self.hit_team = hit_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nHittingP: ' + self.hitting_player[0].encode('utf-8') + ' ' + self.hitting_player[1].encode('utf-8')\
+		 + '\nHitP: ' + self.hit_player[0].encode('utf-8') + ' ' + self.hit_player[1].encode('utf-8')\
+		 + '\nHittingT: ' + self.hitting_team.encode('utf-8')\
+		 + '\nHitT: ' + self.hit_team.encode('utf-8')
