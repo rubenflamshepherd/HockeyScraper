@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take
 from random import randint
 from dateutil.parser import parse
 
@@ -128,7 +128,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		
 		start_time = description_raw[-2]
 		time_zone = description_raw[-1]
-		
+
 		return PeriodStart(
 			event.num,\
 			event.per_num,\
@@ -180,6 +180,50 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			winning_team,\
 			losing_team
 			)
+
+	elif event.event_type == 'GIVE' or event.event_type == 'TAKE':
+
+		zone = description_raw[-2]
+		givetake_team = description_raw[0]
+		givietake_num = description_raw[3].strip('#')
+
+		anchor = Operations.index_containing_substring(description_raw, ',') + 1
+
+		assert anchor != 0, "ERROR - Anchor not found"
+
+		givetake_name = (" ".join(description_raw[4:anchor])).strip(',')
+
+		givetake_player = (givietake_num, givetake_name)
+
+		if event.event_type == 'GIVE':
+			return Give(
+				event.num,\
+				event.per_num,\
+				event.strength,\
+				event.time,\
+				event.event_type,\
+				event.description,\
+				event.away_on_ice,\
+				event.home_on_ice,\
+				zone,\
+				givetake_player,\
+				givetake_team
+				)
+
+		elif event.event_type == 'TAKE':
+			return Take(
+				event.num,\
+				event.per_num,\
+				event.strength,\
+				event.time,\
+				event.event_type,\
+				event.description,\
+				event.away_on_ice,\
+				event.home_on_ice,\
+				zone,\
+				givetake_player,\
+				givetake_team
+				)
 
 	elif event.event_type == 'SHOT':
 		
@@ -612,9 +656,9 @@ if __name__ == '__main__':
 	print gamepersonnel_temp
 	events = playbyplay_extractor ("20152016", "0001")
 	
-	for x in range (0,324):
+	for x in range (0, 50):
 		#print events[x]
-		if events[x].event_type == 'STOP':
+		if events[x].event_type == 'GIVE' or events[x].event_type == 'TAKE':
 			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice

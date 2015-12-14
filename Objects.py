@@ -261,3 +261,37 @@ class Stop(Event):
 		 + '\nSP: ' + str(self.stopping_player[0]) + ' ' + str(self.stopping_player[1])\
 		 + '\nTVTO: ' + str(self.tv_timeout)\
 		 + '\nTO Caller: ' + str(self.timeout_caller)
+
+class Give(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, giving_player, giving_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.giving_player = giving_player
+		self.giving_team = giving_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nPlayer: ' + self.giving_player[0].encode('utf-8') + ' ' + self.giving_player[1].encode('utf-8')\
+		 + '\nTeam: ' + self.giving_team.encode('utf-8')
+
+class Take(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, taking_player, taking_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.taking_player = taking_player
+		self.taking_team = taking_team
+	
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nPlayer: ' + self.taking_player[0].encode('utf-8') + ' ' + self.taking_player[1].encode('utf-8')\
+		 + '\nTeam: ' + self.taking_team.encode('utf-8')
