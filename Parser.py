@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take, Goal
 from random import randint
 from dateutil.parser import parse
 
@@ -19,7 +19,7 @@ def game_info_extractor (year, game_num):
 	standard header on html report (via an xml tree) stored as a local file.
 	'''
 
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
+	file_path = "C:/Users/Daniel/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
 	with open (file_path, 'r') as temp_file:
 		read_data = temp_file.read()
 		
@@ -73,13 +73,15 @@ def playbyplay_extractor (year, game_num):
 	#   item = tree.xpath('//table/tr[@class="evenColor"]') [x]
 	                
 	    event_raw = item.xpath('./td/text()')
-	    
+
 	    num = unicode(event_raw[0])
 	    per_num = unicode(event_raw[1])
 	    strength = unicode(event_raw[2])
 	    time = unicode(event_raw[3])
 	    event_type = unicode(event_raw[5])
 	    description = unicode(event_raw[6])
+	    if event_type == 'GOAL' and event_raw[7].find('Assist') != -1:
+	    	description = unicode(" ".join(event_raw[6:8]))
 
 	    players_on_ice = item.xpath('./td/table')
 
@@ -474,13 +476,77 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			)
 
 	elif event.event_type == 'GOAL':
+
+		prim_assist_player = (None, None)
+		sec_assist_player = (None, None)
+
 		scoring_team = description_raw[0]
 		scoring_num = description_raw[1].strip('#')
 
 		anchor1 = Operations.index_containing_substring(description_raw, ',') + 1
+		anchor2 = Operations.index_containing_substring(description_raw[anchor1:], ',') + 1
+		anchor3 = Operations.index_containing_substring(description_raw, 'ft.')
 
 		scoring_name = (" ".join(description_raw[2:anchor1]))[:-4]
-		print scoring_name
+		scoring_player = (scoring_num, scoring_name)
+
+		shot_type = (" ".join(description_raw[anchor1:anchor1+anchor2])).strip(',')
+		distance = description_raw[anchor3 - 1]
+		zone = description_raw[anchor3 - 3]
+		
+		if 'Assist:' in description_raw:
+			anchor4 = Operations.index_containing_substring(description_raw, 'Assist:') + 1
+			
+			prim_assist_num = description_raw[anchor4].strip('#')
+			prim_assist_name = (" ".join(description_raw[anchor4 + 1:]))[:-3]
+			prim_assist_player = (prim_assist_num, prim_assist_name)
+			
+		elif 'Assists:' in description_raw:
+			anchor4 = Operations.index_containing_substring(description_raw, 'Assists:') + 1
+			anchor5 = Operations.index_containing_substring(description_raw, ';') + 1
+			
+			prim_assist_num = description_raw[anchor4].strip('#')
+			prim_assist_name = (" ".join(description_raw[anchor4 + 1:anchor5]))[:-4]
+			prim_assist_player = (prim_assist_num, prim_assist_name)
+
+			sec_assist_num = description_raw[anchor5].strip('#')
+			sec_assist_name = (" ".join(description_raw[anchor5 + 1:]))[:-3]
+			sec_assist_player = (sec_assist_num, sec_assist_name)
+			
+		if scoring_team == home_team:
+		 	defending_on_ice = event.away_on_ice
+		 	defending_team = away_team
+		elif scoring_team == away_team:
+		 	defending_on_ice = event.home_on_ice
+		 	defending_team = home_team
+
+		for player in defending_on_ice:
+			if player[0] == 'Goalie':
+				goalie_name = " ".join(player[1].split()[1:])
+				goalie_num = player[2]
+				goalie = (goalie_num, goalie_name)
+		print goalie
+
+		return Goal(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			shot_type, \
+			distance, \
+			scoring_player, \
+			scoring_team, \
+			prim_assist_player, \
+			sec_assist_player,\
+			goalie,\
+			defending_team
+			)
+		
 
 
 def get_playerid(first_name, last_name):
@@ -669,6 +735,7 @@ if __name__ == '__main__':
 	for x in range (0, 300):
 		#print events[x]
 		if events[x].event_type == 'GOAL':
+			#print events[x]
 			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice

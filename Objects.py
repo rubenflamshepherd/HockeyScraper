@@ -295,3 +295,32 @@ class Take(Event):
 		 + '\nZone: ' + self.zone.encode('utf-8')\
 		 + '\nPlayer: ' + self.taking_player[0].encode('utf-8') + ' ' + self.taking_player[1].encode('utf-8')\
 		 + '\nTeam: ' + self.taking_team.encode('utf-8')
+
+class Goal(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, shot_type, distance, scoring_player, scoring_team, prim_assist_player, sec_assist_player,\
+					goalie, defending_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.shot_type = shot_type
+		self.distance = distance
+		self.scoring_player = scoring_player
+		self.scoring_team = scoring_team
+		self.prim_assist_player = prim_assist_player
+		self.sec_assist_player = sec_assist_player
+		self.goalie = goalie
+		self.defending_team = defending_team
+
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
+		 + '\nDistance: ' + self.distance.encode('utf-8')\
+		 + '\nSP: ' + str(self.scoring_player[0]) + ' ' + str(self.scoring_player[1])\
+		 + '\nPA: ' + str(self.prim_assist_player[0]) + ' ' + str(self.prim_assist_player[1])\
+		 + '\nSA: ' + str(self.sec_assist_player[0]) + ' ' + str(self.sec_assist_player[1])\
+		 + '\nGoalie: ' + str(self.goalie[0]) + ' ' + str(self.goalie[1])\
+		 + '\nDT: ' + self.defending_team.encode('utf-8')

@@ -15,7 +15,7 @@ def grabber (season, start_game, finish_game, game_type):
 	local file
 	'''
 
-	destination_path =  "C:/Users/Ruben/Projects/HockeyScraper/Reports/"
+	destination_path =  "C:/Users/Daniel/Projects/HockeyScraper/Reports/"
 	report_types = ["GS", "ES", "FC", "FS", "PL", "TV", "TH", "RO", "SS"]
 	not_found_urls = []
 	start_time = time.time()
