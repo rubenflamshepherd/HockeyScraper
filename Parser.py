@@ -473,6 +473,16 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			timeout_caller
 			)
 
+	elif event.event_type == 'GOAL':
+		scoring_team = description_raw[0]
+		scoring_num = description_raw[1].strip('#')
+
+		anchor1 = Operations.index_containing_substring(description_raw, ',') + 1
+
+		scoring_name = (" ".join(description_raw[2:anchor1]))[:-4]
+		print scoring_name
+
+
 def get_playerid(first_name, last_name):
 	'''
 	given a player's first name and last name, find their playerid in db
@@ -651,14 +661,14 @@ if __name__ == '__main__':
 	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
 	#game_info_scraper ("20142015", "0001")
 
-	gameinfo_temp = game_info_extractor	("20152016", "0001")
-	gamepersonnel_temp = game_personnel_creator ("20152016", "0001")
+	gameinfo_temp = game_info_extractor	("20152016", "0003")
+	gamepersonnel_temp = game_personnel_creator ("20152016", "0003")
 	print gamepersonnel_temp
-	events = playbyplay_extractor ("20152016", "0001")
+	events = playbyplay_extractor ("20152016", "0003")
 	
-	for x in range (0, 50):
+	for x in range (0, 300):
 		#print events[x]
-		if events[x].event_type == 'GIVE' or events[x].event_type == 'TAKE':
+		if events[x].event_type == 'GOAL':
 			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
