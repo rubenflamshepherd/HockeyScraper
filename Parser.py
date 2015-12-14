@@ -546,7 +546,36 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			goalie,\
 			defending_team
 			)
-		
+
+	elif event.event_type == 'PENL':
+
+		description_raw = re.split('\W+', event.description)
+		#print description_raw
+		penalized_team = description_raw[0]
+		penalized_num = description_raw[1].strip('#')
+
+		for index, item in enumerate(description_raw[2:]):
+			if not str(item).isupper():
+				anchor1 = index + 2
+				break
+
+		penalized_name = " ".join(description_raw[2:anchor1])
+		penalized_player = (penalized_num, penalized_name)
+		print penalized_player
+
+		anchor2 = description_raw.index('min') -1
+		penalty_length = description_raw [anchor2]
+		penalty_type = " ".join(description_raw[anchor1:anchor2])
+
+		print penalty_length, penalty_type
+
+		anchor3 = description_raw.index('Zone') - 1
+		zone = description_raw [anchor3]
+
+		print zone
+		anchor4 = description_raw.index('By:')
+		if anchor4 != -1:
+			
 
 
 def get_playerid(first_name, last_name):
@@ -734,9 +763,9 @@ if __name__ == '__main__':
 	
 	for x in range (0, 300):
 		#print events[x]
-		if events[x].event_type == 'GOAL':
+		if events[x].event_type == 'PENL':
 			#print events[x]
-			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
+			event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
