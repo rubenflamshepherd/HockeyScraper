@@ -324,3 +324,29 @@ class Goal(Event):
 		 + '\nSA: ' + str(self.sec_assist_player[0]) + ' ' + str(self.sec_assist_player[1])\
 		 + '\nGoalie: ' + str(self.goalie[0]) + ' ' + str(self.goalie[1])\
 		 + '\nDT: ' + self.defending_team.encode('utf-8')
+
+class Penalty(Event):
+
+	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
+					zone, penalty_type, length, penalized_player, drawing_player, penalized_team, drawing_team):
+		Event.__init__(self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice)
+		self.zone = zone
+		self.penalty_type = penalty_type
+		self.length = length
+		self.penalized_player = penalized_player
+		self.drawing_player = drawing_player
+		self.penalized_team = penalized_team
+		self.drawing_team = drawing_team
+
+	def __str__ (self):
+		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
+		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
+		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
+		 + '\nZone: ' + self.zone.encode('utf-8')\
+		 + '\nPenalty type: ' + self.penalty_type.encode('utf-8')\
+		 + '\nLength: ' + self.length.encode('utf-8')\
+		 + '\nPP: ' + str(self.penalized_player[0]) + ' ' + str(self.penalized_player[1])\
+		 + '\nDP: ' + str(self.drawing_player[0]) + ' ' + str(self.drawing_player[1])\
+		 + '\nPT: ' + str(self.penalized_team)\
+		 + '\nDT: ' + str(self.drawing_team)
+		 

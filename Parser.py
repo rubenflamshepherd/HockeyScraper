@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take, Goal
+from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take, Goal, Penalty
 from random import randint
 from dateutil.parser import parse
 
@@ -19,7 +19,7 @@ def game_info_extractor (year, game_num):
 	standard header on html report (via an xml tree) stored as a local file.
 	'''
 
-	file_path = "C:/Users/Daniel/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
+	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
 	with open (file_path, 'r') as temp_file:
 		read_data = temp_file.read()
 		
@@ -552,6 +552,11 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		description_raw = re.split('\W+', event.description)
 		#print description_raw
 		penalized_team = description_raw[0]
+		if penalized_team == home_team:
+			drawing_team = away_team
+		elif penalized_team == away_team:
+			drawing_team = home_team
+
 		penalized_num = description_raw[1].strip('#')
 
 		for index, item in enumerate(description_raw[2:]):
@@ -561,20 +566,40 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		penalized_name = " ".join(description_raw[2:anchor1])
 		penalized_player = (penalized_num, penalized_name)
-		print penalized_player
-
+		
 		anchor2 = description_raw.index('min') -1
-		penalty_length = description_raw [anchor2]
+		length = description_raw [anchor2]
 		penalty_type = " ".join(description_raw[anchor1:anchor2])
-
-		print penalty_length, penalty_type
 
 		anchor3 = description_raw.index('Zone') - 1
 		zone = description_raw [anchor3]
 
-		print zone
-		anchor4 = description_raw.index('By:')
-		if anchor4 != -1:
+		try:
+			anchor4 = description_raw.index('By') + 1
+			drawing_num = description_raw [anchor4 + 1].strip('#')
+			drawing_name = " ".join(description_raw [anchor4 + 2:]).strip('#')
+			drawing_player = (drawing_num, drawing_name)
+
+		except ValueError:
+			drawing_player = (None, None)
+
+		return Penalty(
+			event.num,\
+			event.per_num,\
+			event.strength,\
+			event.time,\
+			event.event_type,\
+			event.description,\
+			event.away_on_ice,\
+			event.home_on_ice,\
+			zone,\
+			penalty_type,\
+			length,\
+			penalized_player,\
+			drawing_player,\
+			penalized_team,\
+			drawing_team
+			)
 			
 
 
@@ -765,7 +790,7 @@ if __name__ == '__main__':
 		#print events[x]
 		if events[x].event_type == 'PENL':
 			#print events[x]
-			event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
+			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
