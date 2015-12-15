@@ -1,3 +1,8 @@
+# sys.setdefaultencoding() does not exist, here!
+import sys
+reload(sys)  # Reload does the trick!
+sys.setdefaultencoding('UTF8')
+
 class GamePersonnel(object):
 	def __init__ (self, away_roster, home_roster, away_coach, home_coach, referees, linesmen):
 		self.away_roster = away_roster
@@ -89,6 +94,17 @@ class GameInfo:
 		self.home_score = home_score
 		self.home_team = home_team
 		self.home_team_game_nums = home_team_game_nums
+
+	def __str__ (self):
+
+		return "Game Date: " + str(self.game_date)\
+				 + '\nAttendance: ' + str(self.attendance_arena)\
+				 + '\nGame Start: ' + str(self.game_start_end)\
+				 + '\nGame Num: ' + str(self.game_num)\
+				 + '\n' + str(self.away_team) + ' vs ' + str(self.home_team)\
+				 + '\n' + str(self.away_score) + ' - ' + str(self.home_score)\
+				 + '\nAway ' + str(self.away_team_game_nums)\
+				 + '\nHome ' + str(self.home_team_game_nums)
 
 
 

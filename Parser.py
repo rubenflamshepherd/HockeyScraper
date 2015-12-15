@@ -9,7 +9,7 @@ import os
 import requests
 import Operations
 import time
-from Objects import Event, Roster, Coach, Referee, Linesman, PeriodStart, FaceOff, Shot, GameInfo, Block, Miss, Hit, GamePersonnel, Stop, Give, Take, Goal, Penalty
+import Objects
 from random import randint
 from dateutil.parser import parse
 
@@ -17,39 +17,65 @@ def game_info_extractor (year, game_num):
 	'''
 	Extract information about a game (attendance, home team, etc.) from an
 	standard header on html report (via an xml tree) stored as a local file.
+	Return a GameInfo object.
 	'''
 
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
+	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" \
+					+ year + "/PL02" + game_num + ".HTM"
 	with open (file_path, 'r') as temp_file:
 		read_data = temp_file.read()
 		
 	tree = html.fromstring(read_data)
 	
-	away_info_raw = tree.xpath('//tr/td[@valign="top"]/table[@id="Visitor"]')[0]
-	away_score = away_info_raw.xpath('.//td[@style="font-size: 40px;font-weight:bold"]/text()')[0]
-	away_team_raw = away_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
-	away_team_game_nums = away_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[1]
+	away_info_raw = tree.xpath(
+		'//tr/td[@valign="top"]/table[@id="Visitor"]'
+		)[0]
+	away_score = away_info_raw.xpath(
+		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
+		)[0]
+	away_team_raw = away_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[0]
+	away_team_game_nums = away_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[1]
 
-	home_info_raw = tree.xpath('//tr/td[@valign="top"]/table[@id="Home"]')[0]
-	home_score = home_info_raw.xpath('.//td[@style="font-size: 40px;font-weight:bold"]/text()')[0]
-	home_team_raw = home_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
-	home_team_game_nums = home_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[1]
+	home_info_raw = tree.xpath(
+		'//tr/td[@valign="top"]/table[@id="Home"]'
+		)[0]
+	home_score = home_info_raw.xpath(
+		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
+		)[0]
+	home_team_raw = home_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[0]
+	home_team_game_nums = home_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[1]
 
-	game_info_raw = tree.xpath('//tr/td/table[@id="GameInfo"]')[0]
-	game_date = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[0]
-	attendance_arena = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[1]
-	game_start_end = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[2]
-	game_num = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[3]
-	report_type = game_info_raw.xpath('.//td[@style="font-size: 10px;font-weight:bold"]/text()')[4]
+	game_info_raw = tree.xpath(
+		'//tr/td/table[@id="GameInfo"]'
+		)[0]
+	game_date = game_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[0]
+	attendance_arena = game_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[1]
+	game_start_end = game_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[2]
+	game_num = game_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[3]
+	report_type = game_info_raw.xpath(
+		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
+		)[4]
 
 	away_team = Operations.team_name_to_acronym (away_team_raw)
 	home_team = Operations.team_name_to_acronym (home_team_raw)
 
-	print game_date, attendance_arena, game_start_end, game_num, report_type
-	print away_score, away_team, away_team_game_nums
-	print home_score, home_team, home_team_game_nums
-
-	return GameInfo (
+	return Objects.GameInfo (
 		game_date, attendance_arena, game_start_end, game_num,\
 		away_score, away_team, away_team_game_nums,\
 		home_score, home_team, home_team_game_nums
@@ -111,7 +137,7 @@ def playbyplay_extractor (year, game_num):
 	    #print away_on_ice
 	    #print home_on_ice
 
-	    event = Event(num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice)
+	    event = Objects.Event(num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice)
 	    #print num , per_num , strength , time, event_type, description
 	    
 	    events.append (event)	    
@@ -131,7 +157,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		start_time = description_raw[-2]
 		time_zone = description_raw[-1]
 
-		return PeriodStart(
+		return Objects.PeriodStart(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -167,7 +193,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			winning_player = (home_num, home_name)
 			losing_player = (away_num, away_name)
 
-		return FaceOff(
+		return Objects.FaceOff(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -198,7 +224,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		givetake_player = (givietake_num, givetake_name)
 
 		if event.event_type == 'GIVE':
-			return Give(
+			return Objects.Give(
 				event.num,\
 				event.per_num,\
 				event.strength,\
@@ -213,7 +239,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 				)
 
 		elif event.event_type == 'TAKE':
-			return Take(
+			return Objects.Take(
 				event.num,\
 				event.per_num,\
 				event.strength,\
@@ -257,7 +283,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		blocking_player = (blocking_num, blocking_name)
 
-		return Shot(
+		return Objects.Shot(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -297,7 +323,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		blocking_player = (blocking_num, blocking_name)
 
-		return Block(
+		return Objects.Block(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -346,7 +372,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		blocking_player = (blocking_num, blocking_name)
 
-		return Miss(
+		return Objects.Miss(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -386,7 +412,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		hit_player = (hit_num, hit_name)
 
-		return Hit(
+		return Objects.Hit(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -426,14 +452,15 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			timeout_caller = game_personnel.away_coach.full_name()
 		
 		if "GOALIE" in description_raw or 'FROZEN' in description_raw:
-			next_event = event_list[event_index + 1]
+			counter = event_index + 1
+			next_event = event_list[counter]
 
-			# Sometimes shot causing the stoppage is logged after the stoppage
-			if next_event.event_type != 'FAC':
-				next_event = event_list[event_index + 2]
+			# Sometimes events are logged (penalties, shots, etc) are logged
+			# between STOP and subsequent FAC event
+			while next_event.event_type != 'FAC':
+				counter += 1
+				next_event = event_list[counter]
 
-			assert next_event.event_type == 'FAC', "ERROR: Event after STOP is not a FAC"
-			
 			next_description_raw = next_event.description.split ()
 			winning_team = next_description_raw[0]
 			winning_zone = next_description_raw[2]
@@ -459,7 +486,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 				winning_zone, winning_team, away_team, home_team, event
 				)
 
-		return Stop(
+		return Objects.Stop(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -527,7 +554,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 				goalie = (goalie_num, goalie_name)
 		print goalie
 
-		return Goal(
+		return Objects.Goal(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -583,7 +610,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		except ValueError:
 			drawing_player = (None, None)
 
-		return Penalty(
+		return Objects.Penalty(
 			event.num,\
 			event.per_num,\
 			event.strength,\
@@ -644,7 +671,7 @@ def game_personnel_creator (year, game_num):
 	
 	referees, linesmen = officials_grabber (tables)
 
-	return GamePersonnel (away_roster, home_roster, away_coach, home_coach, referees, linesmen)
+	return Objects.GamePersonnel (away_roster, home_roster, away_coach, home_coach, referees, linesmen)
 
 def coach_grabber (tree):
 	'''
@@ -653,13 +680,13 @@ def coach_grabber (tree):
 	'''
 
 	away_coach_raw = tree[9].xpath('./tr/td/text()')[0]
-	away_coach = Coach(
+	away_coach = Objects.Coach(
 		first_name = away_coach_raw.split()[0],
 		last_name = " ".join(away_coach_raw.split()[1:])
 		)
 
 	home_coach_raw = tree[10].xpath('./tr/td/text()')[0]
-	home_coach = Coach(
+	home_coach = Objects.Coach(
 		first_name = home_coach_raw.split()[0],
 		last_name = " ".join(home_coach_raw.split()[1:])
 		)
@@ -690,10 +717,10 @@ def officials_grabber (tree):
 		last_name = " ".join(official[2:])
 
 		if index < 2:
-			temp_official = Referee (num, first_name, last_name)
+			temp_official = Objects.Referee (num, first_name, last_name)
 			referees.append (temp_official)
 		else:
-			temp_official = Linesman (num, first_name, last_name)
+			temp_official = Objects.Linesman (num, first_name, last_name)
 			linesmen.append (temp_official)
 		# print temp_official
 
@@ -718,7 +745,7 @@ def ind_roster_grabber (tree, team):
 	next (iter_roster)
 
 	for item in iter_roster:
-		temp_player = Roster()
+		temp_player = Objects.Roster()
 
 		temp_player.num = item.xpath('./td/text()')[0]
 		temp_player.pos = item.xpath('./td/text()')[1]
@@ -750,7 +777,7 @@ def ind_roster_grabber (tree, team):
 	next (iter_scratches)
 
 	for item in iter_scratches:
-		temp_player = Roster()
+		temp_player = Objects.Roster()
 
 		temp_player.scratch = 1
 		temp_player.num = item.xpath('./td/text()')[0]
@@ -782,15 +809,13 @@ if __name__ == '__main__':
 	#game_info_scraper ("20142015", "0001")
 
 	gameinfo_temp = game_info_extractor	("20152016", "0003")
+	print gameinfo_temp
 	gamepersonnel_temp = game_personnel_creator ("20152016", "0003")
-	print gamepersonnel_temp
 	events = playbyplay_extractor ("20152016", "0003")
 	
 	for x in range (0, 300):
 		#print events[x]
-		if events[x].event_type == 'PENL':
-			#print events[x]
-			print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
+		event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 		#print events[x].away_on_ice
 		#print events[x].home_on_ice
 	
