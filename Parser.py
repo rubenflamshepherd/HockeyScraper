@@ -81,66 +81,146 @@ def game_info_extractor (year, game_num):
 		home_score, home_team, home_team_game_nums
 		)
 
+def game_summary_extractor (year, game_num):
+	'''
+	Extract information from game summery html file to run tests
+	'''
+
+	tree = Operations.germinate_report_seed (year, game_num, "GS", '02')
+
+	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
+	
+	goals_raw = tables[2].xpath('.//tr')
+
+	# Skipping first item in iterable roster
+	iter_goals = iter(tables[2].xpath('.//tr'))
+	next (iter_goals)
+
+	for item in iter_goals:
+		temp_goal = item.xpath('.//td/text()')
+		temp_xpath = item.xpath('.//td')
+		
+		goal_num = temp_goal[0]
+		per_num = temp_goal[1]
+		time = temp_goal[2]
+		strength = temp_goal[3]
+		scoring_team = temp_goal[4]
+		
+		scoring_player_raw = temp_goal [5].split()
+		scoring_num = scoring_player_raw[0]
+		name_raw = scoring_player_raw[1]
+		scoring_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+
+		scoring_player = (scoring_num, scoring_name)
+		
+		try:
+			prim_assist_player_raw = temp_goal [6].split()
+			prim_assist_num = prim_assist_player_raw[0]
+			name_raw = prim_assist_player_raw[1]
+			prim_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+
+			prim_assist_player = (prim_assist_num, prim_assist_name)
+
+		except:
+			prim_assist_player = (None, None)
+		
+		try:
+			sec_assist_player_raw = temp_goal [7].split()
+			sec_assist_num = sec_assist_player_raw[0]
+			name_raw = sec_assist_player_raw[1]
+			sec_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+
+			sec_assist_player = (sec_assist_num, sec_assist_name)
+
+		except:
+			sec_assist_player = (None, None)
+		
+		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8])
+		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
+
+	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
+	home_penalties_raw = penalties_raw[0]
+	iter_home_penalties = iter(home_penalties_raw)
+	next (iter_home_penalties)
+
+	for item in iter_home_penalties:
+		item_parts = item.xpath('./td/text()')
+		pen_num = item_parts[0]
+		per_num = item_parts[1]
+		pen_time = item_parts[2]
+		pen_length = item_parts[5]
+		pen_type = item_parts[6]
+		
+		player_raw = item.xpath('./td/table/tr/td/text()')
+		player_num = player_raw[0]
+		player_name = player_raw[3][2:] # First inital infront of name
+		penalized_player = (player_num, player_name) 
+
+		print item_parts
+		print penalized_player
+		#print etree.tostring (item, pretty_print = True)
+	
+	#for item in tree.xpath('//table/[@id = "MainTable"]'):
+	
+
 def playbyplay_extractor (year, game_num):
 	"""
 	Extract play-by-play information from a html file on the
 	local machine (in the form of events)
 	"""
-	
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" + year + "/PL02" + game_num + ".HTM"
-	with open (file_path, 'r') as temp_file:
-		read_data = temp_file.read()
-	tree = html.fromstring(read_data)
 
-	events = []
+	tree = Operations.germinate_report_seed(year,game_num,'PL','02')
+
+	events = [] # empty list for holding unspecified events
 	
 	for item in tree.xpath('//table/tr[@class="evenColor"]'):
 	#for x in range (116, 120):
 	#   item = tree.xpath('//table/tr[@class="evenColor"]') [x]
-	                
-	    event_raw = item.xpath('./td/text()')
+					
+		event_raw = item.xpath('./td/text()')
 
-	    num = unicode(event_raw[0])
-	    per_num = unicode(event_raw[1])
-	    strength = unicode(event_raw[2])
-	    time = unicode(event_raw[3])
-	    event_type = unicode(event_raw[5])
-	    description = unicode(event_raw[6])
-	    if event_type == 'GOAL' and event_raw[7].find('Assist') != -1:
-	    	description = unicode(" ".join(event_raw[6:8]))
+		num = unicode(event_raw[0])
+		per_num = unicode(event_raw[1])
+		strength = unicode(event_raw[2])
+		time = unicode(event_raw[3])
+		event_type = unicode(event_raw[5])
+		description = unicode(event_raw[6])
 
-	    players_on_ice = item.xpath('./td/table')
+		# Goals have an additional row in the description cell for assists
+		if event_type == 'GOAL' and event_raw[7].find('Assist') != -1:
+			description = unicode(" ".join(event_raw[6:8]))
 
-	    home_on_ice = []
-	    away_on_ice = []
-	        
-	    if len (players_on_ice) == 2:
+		players_on_ice = item.xpath('./td/table')
 
-	        away_players_raw = players_on_ice[0].xpath ('.//font')
-	        for away_player in away_players_raw:
-	            position_name = away_player.xpath ('./@title')
-	            number = away_player.xpath ('./text()') [0]
-
-	            position, name = position_name[0].split(' - ')
-
-	            away_on_ice.append ([position, name, number])
-	        
-	        home_players_raw = players_on_ice[1].xpath ('.//font')
-	        for home_player in home_players_raw:
-	            position_name = home_player.xpath ('./@title')
-	            number = home_player.xpath ('./text()') [0]
-
-	            position, name = position_name[0].split(' - ')
-
-	            home_on_ice.append ([position, name, number])
+		home_on_ice = []
+		away_on_ice = []
 			
-	    #print away_on_ice
-	    #print home_on_ice
+		if len (players_on_ice) == 2:
 
-	    event = Objects.Event(num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice)
-	    #print num , per_num , strength , time, event_type, description
-	    
-	    events.append (event)	    
+			away_players_raw = players_on_ice[0].xpath ('.//font')
+			for away_player in away_players_raw:
+				position_name = away_player.xpath ('./@title')
+				number = away_player.xpath ('./text()') [0]
+
+				position, name = position_name[0].split(' - ')
+
+				away_on_ice.append ([position, name, number])
+			
+			home_players_raw = players_on_ice[1].xpath ('.//font')
+			for home_player in home_players_raw:
+				position_name = home_player.xpath ('./@title')
+				number = home_player.xpath ('./text()') [0]
+
+				position, name = position_name[0].split(' - ')
+
+				home_on_ice.append ([position, name, number])
+
+		event = Objects.Event(
+			num, per_num, strength, time, event_type, description,\
+			away_on_ice, home_on_ice
+			)
+		
+		events.append (event)	    
 	return events
 
 def event_object_extractor(event_index, event_list, game_personnel, away_team, home_team):
@@ -541,11 +621,11 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			sec_assist_player = (sec_assist_num, sec_assist_name)
 			
 		if scoring_team == home_team:
-		 	defending_on_ice = event.away_on_ice
-		 	defending_team = away_team
+			defending_on_ice = event.away_on_ice
+			defending_team = away_team
 		elif scoring_team == away_team:
-		 	defending_on_ice = event.home_on_ice
-		 	defending_team = home_team
+			defending_on_ice = event.home_on_ice
+			defending_team = home_team
 
 		for player in defending_on_ice:
 			if player[0] == 'Goalie':
@@ -628,8 +708,6 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			drawing_team
 			)
 			
-
-
 def get_playerid(first_name, last_name):
 	'''
 	given a player's first name and last name, find their playerid in db
@@ -653,14 +731,14 @@ def game_personnel_creator (year, game_num):
 	Extract roster information from a html file on the
 	local machine and create database entries
 	"""
-	
+	'''
 	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" +\
 					year + "/RO02" + game_num + ".HTM"
 
 	with open (file_path, 'r') as temp_file:
 		read_data = temp_file.read()
-
-	tree = html.fromstring(read_data)
+	'''
+	tree = Operations.germinate_report_seed (year, game_num, "RO", '02')#html.fromstring(read_data)
 
 	tables = tree.xpath('//table//table//table//table')
 
@@ -797,28 +875,21 @@ def ind_roster_grabber (tree, team):
 	
 	'''
 	for item in tree.xpath('//table//table//table//table'):
-	    event_raw = item.xpath('./td/text()')
-	    print etree.tostring (item, pretty_print = True)
+		event_raw = item.xpath('./td/text()')
+		print etree.tostring (item, pretty_print = True)
 	'''
 
 	
 
 if __name__ == '__main__':
-	# grabber ("20142015", 1, 110, '02')
-	# print checker ('http://www.nhl.com/scores/htmlreports/20142015/PL021230.HTM')
-	#game_info_scraper ("20142015", "0001")
-
+	'''
 	gameinfo_temp = game_info_extractor	("20152016", "0003")
-	print gameinfo_temp
 	gamepersonnel_temp = game_personnel_creator ("20152016", "0003")
 	events = playbyplay_extractor ("20152016", "0003")
 	
 	for x in range (0, 300):
-		#print events[x]
+		
 		event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
-		#print events[x].away_on_ice
-		#print events[x].home_on_ice
-	
-	
-	# game_personel_creator ("20142015", "0001")
-	
+	'''
+
+	game_summary_extractor ("20152016", "0003")

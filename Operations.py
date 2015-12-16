@@ -1,3 +1,38 @@
+from lxml import html
+
+def chop_on_ice_branch(tree):
+	'''
+	'''
+
+	away_on_ice = []
+
+	away_players_raw = tree.xpath ('.//font')
+
+
+	for away_player in away_players_raw:
+		position_name = away_player.xpath ('./@title')
+		number = away_player.xpath ('./text()') [0]
+
+		position, name = position_name[0].split(' - ')
+
+		away_on_ice.append ([position, name, number])
+
+	return away_on_ice
+
+
+def germinate_report_seed (year, game_num, report_type, game_type):
+	'''
+	Given a report type, return the xml tree created from an locally stored
+	html file  
+	'''
+
+	root = "C:/Users/Ruben/Projects/HockeyScraper/Reports/"
+	
+	file_path = root + year + "/" + report_type + game_type + game_num + ".HTM"
+	with open (file_path, 'r') as temp_file:
+		read_data = temp_file.read()
+	return html.fromstring(read_data)
+
 def team_responsible(winning_zone, winning_team, away_team, home_team, event):
 	'''
 	Given an event (icing, goalie stoppage, etc.) that results in an faceoff
