@@ -4,6 +4,7 @@ Parse information from html reports stored as local files using xml trees
 
 from lxml import html, etree
 import re
+import GameSummary
 import sqlite3
 import os
 import requests
@@ -139,26 +140,25 @@ def game_summary_extractor (year, game_num):
 		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
 
 	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
-	home_penalties_raw = penalties_raw[0]
-	iter_home_penalties = iter(home_penalties_raw)
-	next (iter_home_penalties)
+	
+	home_penalties = GameSummary.chop_penalties_branch (penalties_raw[0])
+	away_penalties = GameSummary.chop_penalties_branch (penalties_raw[1])
 
-	for item in iter_home_penalties:
-		item_parts = item.xpath('./td/text()')
-		pen_num = item_parts[0]
-		per_num = item_parts[1]
-		pen_time = item_parts[2]
-		pen_length = item_parts[5]
-		pen_type = item_parts[6]
-		
-		player_raw = item.xpath('./td/table/tr/td/text()')
-		player_num = player_raw[0]
-		player_name = player_raw[3][2:] # First inital infront of name
-		penalized_player = (player_num, player_name) 
+	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
 
-		print item_parts
-		print penalized_player
-		#print etree.tostring (item, pretty_print = True)
+	away_byperiod_raw = byperiod_raw[0].xpath('./tr')
+
+	away_per1_goals = away_byperiod_raw[1].xpath('./td/text()')[1]
+	away_per1_shots = away_byperiod_raw[1].xpath('./td/text()')[2]
+	away_per1_num_penalties = away_byperiod_raw[1].xpath('./td/text()')[3]
+	away_per1_pim = away_byperiod_raw[1].xpath('./td/text()')[4]
+
+
+	print away_per1_goals
+
+	print etree.tostring (away_byperiod_raw[0], pretty_print = True)
+
+	print len (away_byperiod_raw)
 	
 	#for item in tree.xpath('//table/[@id = "MainTable"]'):
 	

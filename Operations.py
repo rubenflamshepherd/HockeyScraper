@@ -1,7 +1,10 @@
 from lxml import html
+import Objects
 
 def chop_on_ice_branch(tree):
 	'''
+	Given xml tree contains table of player on ice data, return that as a list
+	of the individual players
 	'''
 
 	away_on_ice = []
@@ -18,7 +21,6 @@ def chop_on_ice_branch(tree):
 		away_on_ice.append ([position, name, number])
 
 	return away_on_ice
-
 
 def germinate_report_seed (year, game_num, report_type, game_type):
 	'''

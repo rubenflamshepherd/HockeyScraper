@@ -365,4 +365,3 @@ class Penalty(Event):
 		 + '\nDP: ' + str(self.drawing_player[0]) + ' ' + str(self.drawing_player[1])\
 		 + '\nPT: ' + str(self.penalized_team)\
 		 + '\nDT: ' + str(self.drawing_team)
-		 
