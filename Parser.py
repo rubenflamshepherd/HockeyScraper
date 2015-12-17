@@ -145,23 +145,22 @@ def game_summary_extractor (year, game_num):
 	away_penalties = GameSummary.chop_penalties_branch (penalties_raw[1])
 
 	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
-
-	away_byperiod_raw = byperiod_raw[0].xpath('./tr')
-
-	away_per1_goals = away_byperiod_raw[1].xpath('./td/text()')[1]
-	away_per1_shots = away_byperiod_raw[1].xpath('./td/text()')[2]
-	away_per1_num_penalties = away_byperiod_raw[1].xpath('./td/text()')[3]
-	away_per1_pim = away_byperiod_raw[1].xpath('./td/text()')[4]
-
-
-	print away_per1_goals
-
-	print etree.tostring (away_byperiod_raw[0], pretty_print = True)
-
-	print len (away_byperiod_raw)
 	
-	#for item in tree.xpath('//table/[@id = "MainTable"]'):
-	
+	away_periods = GameSummary.chop_byperiod_branch (byperiod_raw[0].xpath('./tr'))
+	home_periods = GameSummary.chop_byperiod_branch (byperiod_raw[1].xpath('./tr'))
+
+	powerplay_raw = tables[6].xpath('./tr/td/table/tr/td/table')
+	evenstrength_raw = tables[7].xpath('./tr/td/table/tr/td/table')
+
+	away_powerplay = GameSummary.chop_situation_branch (powerplay_raw[0])
+	home_powerplay = GameSummary.chop_situation_branch (powerplay_raw[1])
+	away_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[0])
+	home_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[1])
+
+	for item in home_powerplay:
+		print item
+	#print etree.tostring (powerplay_raw[0], pretty_print = True)
+		
 
 def playbyplay_extractor (year, game_num):
 	"""
