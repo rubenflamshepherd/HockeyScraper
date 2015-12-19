@@ -91,54 +91,9 @@ def game_summary_extractor (year, game_num):
 
 	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
 	
-	goals_raw = tables[2].xpath('.//tr')
-
 	# Skipping first item in iterable roster
-	iter_goals = iter(tables[2].xpath('.//tr'))
-	next (iter_goals)
-
-	for item in iter_goals:
-		temp_goal = item.xpath('.//td/text()')
-		temp_xpath = item.xpath('.//td')
+	goals = GameSummary.chop_goals_branch (tables[2].xpath('.//tr'))
 		
-		goal_num = temp_goal[0]
-		per_num = temp_goal[1]
-		time = temp_goal[2]
-		strength = temp_goal[3]
-		scoring_team = temp_goal[4]
-		
-		scoring_player_raw = temp_goal [5].split()
-		scoring_num = scoring_player_raw[0]
-		name_raw = scoring_player_raw[1]
-		scoring_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
-
-		scoring_player = (scoring_num, scoring_name)
-		
-		try:
-			prim_assist_player_raw = temp_goal [6].split()
-			prim_assist_num = prim_assist_player_raw[0]
-			name_raw = prim_assist_player_raw[1]
-			prim_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
-
-			prim_assist_player = (prim_assist_num, prim_assist_name)
-
-		except:
-			prim_assist_player = (None, None)
-		
-		try:
-			sec_assist_player_raw = temp_goal [7].split()
-			sec_assist_num = sec_assist_player_raw[0]
-			name_raw = sec_assist_player_raw[1]
-			sec_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
-
-			sec_assist_player = (sec_assist_num, sec_assist_name)
-
-		except:
-			sec_assist_player = (None, None)
-		
-		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8])
-		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
-
 	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
 	
 	home_penalties = GameSummary.chop_penalties_branch (penalties_raw[0])
@@ -157,11 +112,14 @@ def game_summary_extractor (year, game_num):
 	away_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[0])
 	home_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[1])
 
-	for item in home_powerplay:
-		print item
-	#print etree.tostring (powerplay_raw[0], pretty_print = True)
-		
+	away_goalies, home_goalies = GameSummary.chop_goalie_branch (tables[8])
 
+	linesmen, referees = GameSummary.chop_officials_branch(tables[9])
+
+	stars_picker, game_stars = GameSummary.chop_stars_branch(tables[9])
+	
+	#print etree.tostring (item, pretty_print = True)
+	
 def playbyplay_extractor (year, game_num):
 	"""
 	Extract play-by-play information from a html file on the
