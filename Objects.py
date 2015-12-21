@@ -3,31 +3,6 @@ import sys
 reload(sys)  # Reload does the trick!
 sys.setdefaultencoding('UTF8')
 
-class GamePersonnel(object):
-	def __init__ (self, away_roster, home_roster, away_coach, home_coach, referees, linesmen):
-		self.away_roster = away_roster
-		self.home_roster = home_roster
-		self.away_coach = away_coach
-		self.home_coach = home_coach
-		self.referees = referees
-		self.linesmen = linesmen
-
-	def __str__ (self):
-		return 'Away Coach: ' + self.away_coach.full_name()\
-			+ '\nHome Coach: ' + self.home_coach.full_name()\
-
-class Coach:
-	def __init__ (self, first_name, last_name):
-		self.first_name = first_name
-		self.last_name = last_name
-
-	def full_name (self):
-		return self.first_name + ' ' + self.last_name
-
-	def __str__ (self):
-
-		return self.full_name()
-
 class Official:
 	def __init__ (self, num, first_name, last_name):
 		self.num = num
@@ -35,17 +10,23 @@ class Official:
 		self.last_name = last_name
 
 class Referee (Official):
+
 	def __str__ (self):
 
-		return "Referee: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + '\n'
+		return "Referee: " + str(self.num) + ' ' + str(self.first_name) \
+			+ ' ' + str(self.last_name) + '\n'
 
 class Linesman (Official):
+
 	def __str__ (self):
 
-		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + '\n'
+		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) \
+			+ ' ' + str(self.last_name) + '\n'
 
 class Player:
+
 	def __init__ (self):
+		
 		self.num = None
 		self.height = None
 		self.weight = None
@@ -61,25 +42,11 @@ class Player:
 
 	def __str__ (self):
 
-		return str(self.num) + '\n' + str(self.height) + '\n' + str(self.weight) + '\n' + str(self.hand)\
-		+ '\n' + str(self.draft_team) + '\n' + str(self.draft_yr) + '\n' + str(self.draft_rnd)\
-		+ '\n' + str(self.draft_overall) + '\n' + str(self.pos) + '\n' + str(self.twitter)
-
-class Roster:
-	def __init__ (self):
-		self.num = None
-		self.pos = None
-		self.first_name = None
-		self.last_name = None
-		self.A_C = None
-		self.starting = 0
-		self.scratch = 0
-		self.playerid = None
-
-	def __str__ (self):
-
-		return str(self.num) + ' ' + str(self.pos) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + ' '\
-		+ str(self.A_C) + ' ' + str(self.starting) + ' ' + str(self.scratch) + ' ' + str(self.playerid)
+		return str(self.num) + '\n' + str(self.height) + '\n' \
+			+ str(self.weight) + '\n' + str(self.hand) + '\n' \
+			+ str(self.draft_team) + '\n' + str(self.draft_yr) + '\n' \
+			+  str(self.draft_rnd) + '\n' + str(self.draft_overall) + '\n' \
+			+ str(self.pos) + '\n' + str(self.twitter)
 
 class GameInfo:
 	def __init__(self, game_date, attendance_arena, game_start_end, game_num,\
@@ -106,8 +73,6 @@ class GameInfo:
 				 + '\n' + str(self.away_score) + ' - ' + str(self.home_score)\
 				 + '\nAway ' + str(self.away_team_game_nums)\
 				 + '\nHome ' + str(self.home_team_game_nums)
-
-
 
 class Event:
 

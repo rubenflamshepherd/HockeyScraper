@@ -13,112 +13,6 @@ import time
 import Objects
 from random import randint
 from dateutil.parser import parse
-
-def game_info_extractor (year, game_num):
-	'''
-	Extract information about a game (attendance, home team, etc.) from an
-	standard header on html report (via an xml tree) stored as a local file.
-	Return a GameInfo object.
-	'''
-
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" \
-					+ year + "/PL02" + game_num + ".HTM"
-	with open (file_path, 'r') as temp_file:
-		read_data = temp_file.read()
-		
-	tree = html.fromstring(read_data)
-	
-	away_info_raw = tree.xpath(
-		'//tr/td[@valign="top"]/table[@id="Visitor"]'
-		)[0]
-	away_score = away_info_raw.xpath(
-		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
-		)[0]
-	away_team_raw = away_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	away_team_game_nums = away_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-
-	home_info_raw = tree.xpath(
-		'//tr/td[@valign="top"]/table[@id="Home"]'
-		)[0]
-	home_score = home_info_raw.xpath(
-		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
-		)[0]
-	home_team_raw = home_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	home_team_game_nums = home_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-
-	game_info_raw = tree.xpath(
-		'//tr/td/table[@id="GameInfo"]'
-		)[0]
-	game_date = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	attendance_arena = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-	game_start_end = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[2]
-	game_num = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[3]
-	report_type = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[4]
-
-	away_team = Operations.team_name_to_acronym (away_team_raw)
-	home_team = Operations.team_name_to_acronym (home_team_raw)
-
-	return Objects.GameInfo (
-		game_date, attendance_arena, game_start_end, game_num,\
-		away_score, away_team, away_team_game_nums,\
-		home_score, home_team, home_team_game_nums
-		)
-
-def game_summary_extractor (year, game_num):
-	'''
-	Extract information from game summery html file to run tests
-	'''
-
-	tree = Operations.germinate_report_seed (year, game_num, "GS", '02')
-
-	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
-	
-	# Skipping first item in iterable roster
-	goals = GameSummary.chop_goals_branch (tables[2].xpath('.//tr'))
-		
-	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
-	
-	home_penalties = GameSummary.chop_penalties_branch (penalties_raw[0])
-	away_penalties = GameSummary.chop_penalties_branch (penalties_raw[1])
-
-	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
-	
-	away_periods = GameSummary.chop_byperiod_branch (byperiod_raw[0].xpath('./tr'))
-	home_periods = GameSummary.chop_byperiod_branch (byperiod_raw[1].xpath('./tr'))
-
-	powerplay_raw = tables[6].xpath('./tr/td/table/tr/td/table')
-	evenstrength_raw = tables[7].xpath('./tr/td/table/tr/td/table')
-
-	away_powerplay = GameSummary.chop_situation_branch (powerplay_raw[0])
-	home_powerplay = GameSummary.chop_situation_branch (powerplay_raw[1])
-	away_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[0])
-	home_evenstrength = GameSummary.chop_situation_branch (evenstrength_raw[1])
-
-	away_goalies, home_goalies = GameSummary.chop_goalie_branch (tables[8])
-
-	linesmen, referees = GameSummary.chop_officials_branch(tables[9])
-
-	stars_picker, game_stars = GameSummary.chop_stars_branch(tables[9])
-	
-	#print etree.tostring (item, pretty_print = True)
 	
 def playbyplay_extractor (year, game_num):
 	"""
@@ -664,105 +558,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 			penalized_team,\
 			drawing_team
 			)
-			
-def get_playerid(first_name, last_name):
-	'''
-	given a player's first name and last name, find their playerid in db
-	'''
 
-	conn = sqlite3.connect ('nhl.db')
-	c = conn.cursor ()
-	c.execute("SELECT * FROM all_players WHERE first_name = ? AND last_name = ?",\
-		(first_name, last_name,))
-	temp_return = c.fetchall()
-
-	assert len(temp_return) == 1, "ERROR: more than one player with that first/last name combo"
-	
-	conn.commit ()
-	conn.close()
-
-	return temp_return [0][0]
-
-def game_personnel_creator (year, game_num):
-	"""
-	Extract roster information from a html file on the
-	local machine and create database entries
-	"""
-	'''
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" +\
-					year + "/RO02" + game_num + ".HTM"
-
-	with open (file_path, 'r') as temp_file:
-		read_data = temp_file.read()
-	'''
-	tree = Operations.germinate_report_seed (year, game_num, "RO", '02')#html.fromstring(read_data)
-
-	tables = tree.xpath('//table//table//table//table')
-
-	away_roster = ind_roster_grabber (tables, 'visitor')
-	home_roster = ind_roster_grabber (tables, 'home')
-	
-	away_coach, home_coach = coach_grabber(tables)
-	
-	referees, linesmen = officials_grabber (tables)
-
-	return Objects.GamePersonnel (away_roster, home_roster, away_coach, home_coach, referees, linesmen)
-
-def coach_grabber (tree):
-	'''
-	Grab away and home coaches from an xml tree (of an html roster report) and
-	return them as a tuple of Coach objects
-	'''
-
-	away_coach_raw = tree[9].xpath('./tr/td/text()')[0]
-	away_coach = Objects.Coach(
-		first_name = away_coach_raw.split()[0],
-		last_name = " ".join(away_coach_raw.split()[1:])
-		)
-
-	home_coach_raw = tree[10].xpath('./tr/td/text()')[0]
-	home_coach = Objects.Coach(
-		first_name = home_coach_raw.split()[0],
-		last_name = " ".join(home_coach_raw.split()[1:])
-		)
-	#print away_coach, home_coach
-
-	return away_coach, home_coach
-
-def officials_grabber (tree):
-	'''
-	Grab referees and linesmen from an xml tree (of an html roster report) and
-	roster html file and return them as a tuple of lists containing 
-	([Referees.objects], [Linesmen.objects])
-	'''
-
-	officials_raw = tree[11].xpath('./tr/td//tr/td/text()')
-
-	assert len(officials_raw) == 4, "ERROR: 4 Officials not present"
-
-	referees = []
-	linesmen = []
-
-	for index, official_raw in enumerate(officials_raw):
-		
-		official = official_raw.split()
-		
-		num = official[0].strip('#')
-		first_name = official[1]
-		last_name = " ".join(official[2:])
-
-		if index < 2:
-			temp_official = Objects.Referee (num, first_name, last_name)
-			referees.append (temp_official)
-		else:
-			temp_official = Objects.Linesman (num, first_name, last_name)
-			linesmen.append (temp_official)
-		# print temp_official
-
-	return referees, linesmen
-
-	
-		
 def ind_roster_grabber (tree, team):
 	"""
 	Extract indivudal information from an xml tree and return list 
@@ -802,7 +598,7 @@ def ind_roster_grabber (tree, team):
 
 		temp_player.last_name = " ".join(temp_name_raw_split[1:])
 
-		temp_player.playerid = get_playerid (temp_player.first_name, temp_player.last_name)
+		temp_player.playerid = Operations.get_playerid (temp_player.first_name, temp_player.last_name)
 
 		# print temp_player
 		roster_objects.append(temp_player)
@@ -823,7 +619,7 @@ def ind_roster_grabber (tree, team):
 		temp_player.first_name = temp_name_raw_split[0]
 		temp_player.last_name = " ".join(temp_name_raw_split[1:])
 
-		temp_player.playerid = get_playerid (temp_player.first_name, temp_player.last_name)
+		temp_player.playerid = Operations.get_playerid (temp_player.first_name, temp_player.last_name)
 
 		# print temp_player
 		roster_objects.append(temp_player)
@@ -848,5 +644,7 @@ if __name__ == '__main__':
 		
 		event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 	'''
+
+	#print etree.tostring (item, pretty_print = True)
 
 	print GameSummary.extractor ("20152016", "0003")

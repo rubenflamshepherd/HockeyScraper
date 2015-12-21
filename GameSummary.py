@@ -271,7 +271,8 @@ def chop_goals_branch (tree):
 			prim_assist_player_raw = temp_goal [6].split()
 			prim_assist_num = prim_assist_player_raw[0]
 			name_raw = prim_assist_player_raw[1]
-			prim_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+			prim_assist_name = name_raw[name_raw.find(".") \
+				+ 1:name_raw.find("(")]
 
 			prim_assist_player = (prim_assist_num, prim_assist_name)
 
@@ -282,7 +283,8 @@ def chop_goals_branch (tree):
 			sec_assist_player_raw = temp_goal [7].split()
 			sec_assist_num = sec_assist_player_raw[0]
 			name_raw = sec_assist_player_raw[1]
-			sec_assist_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+			sec_assist_name = name_raw[name_raw.find(".") \
+				+ 1:name_raw.find("(")]
 
 			sec_assist_player = (sec_assist_num, sec_assist_name)
 
@@ -321,7 +323,9 @@ def chop_penalties_branch (tree):
 		player_name = player_raw[3][2:] # First inital infront of name
 		penalized_player = (player_num, player_name) 
 
-		temp = Penalty(pen_num, per_num, pen_time, pen_length, pen_type, penalized_player)
+		temp = Penalty(
+			pen_num, per_num, pen_time, pen_length, pen_type, penalized_player
+			)
 
 		penalties.append (temp)
 
@@ -342,7 +346,10 @@ def chop_byperiod_branch (tree):
 		num_penalties = tree[x].xpath('./td/text()')[3]
 		PIM = tree[x].xpath('./td/text()')[4]
 
-		periods.append (Period(per_num, num_goals, num_shots, num_penalties, PIM))
+		periods.append (Period(
+			per_num, num_goals, num_shots, num_penalties, PIM
+			)
+		)
 
 	return periods
 
@@ -357,7 +364,8 @@ def chop_situation_branch (tree):
 	header_items = (tree.xpath ("./tr")[0]).xpath("./td/text()")
 	item_data = (tree.xpath ("./tr")[1]).xpath("./td/text()")
 
-	assert len(header_items) == len(item_data), " # of situations != # of situations for which there are stats"
+	assert len(header_items) == len(item_data), \
+		'# of situations != # of situations for which there are stats'
 	
 	for index, strength in enumerate(header_items):
 		
@@ -385,17 +393,22 @@ def chop_goalie_branch(tree):
 		
 		# Setting the list to be populated (away vs home)
 		item_down = item.xpath("./td")[0]
-		if item_down.attrib['class'] == 'rborder + bborder + visitorsectionheading': 
+		if item_down.attrib['class'] \
+			== 'rborder + bborder + visitorsectionheading': 
+
 			active_headers = item.xpath('./td/text()')
 			active_goalies = []
 		
-		elif item_down.attrib['class'] == 'rborder + bborder + homesectionheading': 
+		elif item_down.attrib['class'] \
+			== 'rborder + bborder + homesectionheading': 
+
 			active_headers = item.xpath('./td/text()')
 			away_goalies = active_goalies
 			active_goalies = []
 
 		# Creating Goalie and GoalieField objects
 		elif 'class' in item.attrib:
+
 			if item.attrib['class'] == 'evenColor' or \
 				item.attrib['class'] == 'oddColor':
 				
@@ -404,6 +417,7 @@ def chop_goalie_branch(tree):
 				fields = []
 
 				for index, cell in enumerate(goalie_raw):
+
 					if index == 0:
 						goalie_num = cell
 
@@ -420,7 +434,9 @@ def chop_goalie_branch(tree):
 						else:
 							status = None
 
-						anchor = Operations.index_containing_substring(name_raw, ",")
+						anchor = Operations.index_containing_substring(
+							name_raw, ","
+							)
 
 						last_name = (" ".join(name_raw[:anchor + 1])).strip(',')
 						first_name = " ".join(name_raw[anchor + 1:])
@@ -432,7 +448,11 @@ def chop_goalie_branch(tree):
 						field_content = str(cell)
 						fields.append (GoalieField(field_title, field_content))
 						
-				active_goalies.append (Goalie (goalie_num, first_name, last_name, status, fields))
+				active_goalies.append (Goalie (
+					goalie_num, first_name, last_name, status, fields
+					)
+				)
+
 	home_goalies = active_goalies
 
 	return away_goalies, home_goalies
@@ -447,8 +467,10 @@ def chop_officials_branch(tree):
 	linesmen = []
 
 	officials_raw = tree.xpath('./tr/td/table')[0]
-	referees_raw = officials_raw.xpath('./tr/td/table')[0].xpath('./tr/td/text()')
-	linesmen_raw = officials_raw.xpath('./tr/td/table')[1].xpath('./tr/td/text()')
+	referees_raw = officials_raw.xpath('./tr/td/table')[0] \
+		.xpath('./tr/td/text()')
+	linesmen_raw = officials_raw.xpath('./tr/td/table')[1]\
+		.xpath('./tr/td/text()')
 
 	for item in referees_raw:
 		referee_raw = item.split()
@@ -494,9 +516,10 @@ def chop_stars_branch(tree):
 	#print etree.tostring (stars_raw, pretty_print = True)
  	return picker, stars
 
-def extractor (year, game_num):
+def harvester (year, game_num):
 	'''
-	Extract information from game summery html file to run tests
+	Extract information from game summery html file and returns a 
+	GameSummary object with which we run tests!
 	'''
 
 	tree = Operations.germinate_report_seed (year, game_num, "GS", '02')
