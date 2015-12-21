@@ -849,4 +849,4 @@ if __name__ == '__main__':
 		event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
 	'''
 
-	game_summary_extractor ("20152016", "0003")
+	print GameSummary.extractor ("20152016", "0003")

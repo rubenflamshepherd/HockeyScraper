@@ -7,6 +7,7 @@ class Goal (object):
 	def __init__(self, goal_num, per_num, time, strength, scoring_team, \
 		scoring_player, prim_assist_player, sec_assist_player, \
 		away_on_ice, home_on_ice):
+
 		self.goal_num = goal_num
 		self.per_num = per_num
 		self.time = time
@@ -19,17 +20,26 @@ class Goal (object):
 		self.home_on_ice = home_on_ice
 
 	def __str__ (self):
-		return "Goal #: " + self.goal_num.encode('utf-8') + \
-		'\nPer #: ' + self.per_num.encode('utf-8') +\
-		'\nStr: ' + self.strength.encode('utf-8') +\
-		'\nScoring Team: ' + self.scoring_team.encode('utf-8') +\
-		'\nSP: ' + str(self.scoring_player[0]) + ' ' + str(self.scoring_player[1]) +\
-		'\nPA: ' + str(self.prim_assist_player[0]) + ' ' + str(self.prim_assist_player[1]) +\
-		'\nSA: ' + str(self.sec_assist_player[0]) + ' ' + str(self.sec_assist_player[1])
+
+		goal_num = ("G#: " + self.goal_num.encode('utf-8')).ljust(6)
+		per_num = ("P#: " + self.per_num.encode('utf-8')).ljust(6)
+		strength = ("Str: " + self.strength.encode('utf-8')).ljust(8)
+		scoring_team = ('Tm: ' + self.scoring_team.encode('utf-8')).ljust(8)
+		scoring_player = ('SP: ' + str(self.scoring_player[0]) + ' ' \
+			+ str(self.scoring_player[1])).ljust(17)
+		prim_assist_player = ('PA: ' + str(self.prim_assist_player[0]) + ' ' \
+			+ str(self.prim_assist_player[1])).ljust(17)
+		sec_assist_player = ('SA: ' + str(self.sec_assist_player[0]) + ' ' \
+			+ str(self.sec_assist_player[1])).ljust(17)
+
+		return goal_num + per_num + strength + scoring_team + scoring_player \
+			+ prim_assist_player + sec_assist_player + '\n'
 
 class Penalty(object):
 
-	def __init__(self, pen_num, per_num, pen_time, pen_length, pen_type, penalized_player):
+	def __init__(self, pen_num, per_num, pen_time, pen_length, \
+		pen_type, penalized_player):
+
 		self.pen_num = pen_num
 		self.per_num = per_num
 		self.pen_time = pen_time
@@ -38,13 +48,16 @@ class Penalty(object):
 		self.penalized_player = penalized_player
 
 	def __str__ (self):
-		return "Pen #: " + self.pen_num.encode('utf-8') + \
-		'\nPer #: ' + self.per_num.encode('utf-8') +\
-		'\nTime: ' + self.pen_time.encode('utf-8') +\
-		'\nLength: ' + self.pen_length.encode('utf-8') +\
-		'\nType: ' + self.pen_type.encode('utf-8') +\
-		 '\nPP: ' + str(self.penalized_player[0]) + ' ' + str(self.penalized_player[1])
+		pen_num = ("Pen#: " + self.pen_num.encode('utf-8')).ljust(8)
+		per_num = ("Per#: " + self.per_num.encode('utf-8')).ljust(8)
+		pen_time = ("Time: " + self.pen_time.encode('utf-8')).ljust(12)
+		pen_length = ("Len: " + self.pen_length.encode('utf-8')).ljust(8)
+		penalized_player = ('PP: ' + str(self.penalized_player[0]) + ' ' \
+			+ str(self.penalized_player[1])).ljust(17)
+		pen_type = ("Type: " + self.pen_type.encode('utf-8')).ljust(10)
 
+		return pen_num + per_num + pen_time + pen_length + penalized_player \
+			+ pen_type + '\n'
 
 class Period(object):
 
@@ -56,12 +69,16 @@ class Period(object):
 		self.PIM = PIM
 
 	def __str__ (self):
-		return "Per #: " + self.per_num.encode('utf-8') + \
-		' |Goals: ' + self.num_goals.encode('utf-8') +\
-		' |Shots: ' + self.num_shots.encode('utf-8') +\
-		' |Penalties: ' + self.num_penalties.encode('utf-8') +\
-		' |PIM: ' + self.PIM.encode('utf-8')
 
+		per_num = ("Per#: " + self.per_num.encode('utf-8')).ljust(8)
+		num_goals = ("#G: " + self.num_goals.encode('utf-8')).ljust(8)
+		num_shots = ("#S: " + self.num_shots.encode('utf-8')).ljust(8)
+		num_penalties = ("#Pen: " + self.num_penalties.encode('utf-8')) \
+			.ljust(8)
+		PIM = ("PIM: " + self.PIM.encode('utf-8')).ljust(8)
+
+		return per_num + num_goals + num_shots + num_penalties + PIM + '\n'
+		
 class Situation (object):
 	def __init__(self, strength, num_goals, num_occurances, time):
 		self.strength = strength
@@ -70,11 +87,14 @@ class Situation (object):
 		self.time = time
 
 	def __str__ (self):
-		return self.strength + " : " + \
-		self.num_goals.encode('utf-8') + "-" +\
-		self.num_occurances.encode('utf-8') + "/" +\
-		self.time.encode('utf-8') +\
-		" (Goals-Occurance/Time)"
+
+		strength = ("Str: " + self.strength.encode('utf-8')).ljust(10)
+		num_goals = ("#G: " + self.num_goals.encode('utf-8')).ljust(8)
+		num_occurances = ("#Occur: " + self.num_occurances.encode('utf-8')) \
+			.ljust(10)
+		time = ("Time: " + self.time.encode('utf-8')).ljust(8)
+
+		return strength + num_goals + num_occurances + time + '\n'
 
 class Goalie (object):
 	def __init__(self, num, first_name, last_name, status, fields_list):
@@ -86,25 +106,30 @@ class Goalie (object):
 
 	def __str__ (self):
 
-		fields_header = ''
-		fields_data = ''
-		for item in self.fields_list:
-			fields_header += item.field_title.ljust(6)
-		
-		for item in self.fields_list:
-			fields_data += item.field_content.ljust(6)
-		
-		basic_data = self.num + " | " + \
-			self.first_name.encode('utf-8') + " " +\
-			self.last_name.encode('utf-8') + "|" +\
-			str(self.status).encode('utf-8')
+		num_header = '#'.ljust(3)
+		num_data = self.num.ljust(3)
 
-		all_strings = basic_data + \
-			"\n" + fields_header + \
-			"\n" + fields_data
+		last_name_header = 'LAST NAME'.ljust(14)
+		last_name_data = self.last_name.ljust(14)
 
-		return all_strings
-		
+		first_name_header = 'FIRST'.ljust(9)
+		first_name_data = self.first_name.ljust(9)
+
+		status_header = 'STAT'.ljust(5)
+		status_data = str(self.status).ljust(5)
+
+		header = num_header + last_name_header + first_name_header + \
+			status_header
+		data = num_data + last_name_data + first_name_data + status_data
+
+		for item in self.fields_list:
+			data += item.field_content.ljust(6)
+
+		for item in self.fields_list:
+			header += item.field_title.ljust(6)
+
+		return header + '\n' + data + '\n'
+	
 class GoalieField (object):
 	def __init__(self, field_title, field_content):
 		self.field_title = field_title
@@ -113,6 +138,106 @@ class GoalieField (object):
 	def __str__ (self):
 		return self.field_title + " | " + \
 		self.field_content.encode('utf-8')
+
+class GameSummary (object):
+	def __init__(self, goals, away_penalties, home_penalties, \
+		away_periods, home_periods, away_powerplay, home_powerplay, \
+		away_evenstrength, home_evenstrength, away_goalies, home_goalies, \
+		linesmen, referees, stars_picker, game_stars):
+
+		self.goals = goals
+		self.home_penalties = home_penalties
+		self.away_penalties = away_penalties
+		self.away_periods = away_periods
+		self.home_periods = home_periods
+		self.away_powerplay = away_powerplay
+		self.home_powerplay = home_powerplay
+		self.away_evenstrength = away_evenstrength
+		self.home_evenstrength = home_evenstrength
+		self.away_goalies =away_goalies
+		self.home_goalies =home_goalies
+		self.linesmen = linesmen
+		self.referees = referees
+		self.stars_picker = stars_picker
+		self.game_stars = game_stars
+
+	def __str__ (self):
+
+		goals_str = ''.ljust(30,'#') + ' GOALS '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.goals:
+			goals_str += item.__str__()
+
+		away_penalties = ''.ljust(30,'#') + ' AWAY PENALTIES '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.away_penalties:
+			away_penalties += item.__str__()
+
+		home_penalties = ''.ljust(30,'#') + ' HOME PENALTIES '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.home_penalties:
+			home_penalties += item.__str__()
+
+		away_periods = ''.ljust(30,'#') + ' AWAY PERIODS '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.away_periods:
+			away_periods += item.__str__()
+
+		home_periods = ''.ljust(30,'#') + ' HOME PERIODS '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.home_periods:
+			home_periods += item.__str__()
+		
+		away_powerplay = ''.ljust(30,'#') + ' AWAY POWERPLAY '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.away_powerplay:
+			away_powerplay += item.__str__()
+
+		home_powerplay = ''.ljust(30,'#') + ' HOME POWERPLAY '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.home_powerplay:
+			home_powerplay += item.__str__()
+
+		away_evenstrength = ''.ljust(30,'#') \
+			+ ' AWAY EVENSTRENGTH '.center(18) + ''.ljust(30,'#') + '\n'
+		for item in self.away_evenstrength:
+			away_evenstrength += item.__str__()
+
+		home_evenstrength = ''.ljust(30,'#') \
+			+ ' HOME EVENSTRENGTH '.center(18) + ''.ljust(30,'#') + '\n'
+		for item in self.home_evenstrength:
+			home_evenstrength += item.__str__()
+
+		away_goalies = ''.ljust(30,'#') + ' AWAY GOALIES '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.away_goalies:
+			away_goalies += item.__str__()
+
+		home_goalies = ''.ljust(30,'#') + ' HOME POWERPLAY '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.home_goalies:
+			home_goalies += item.__str__()
+
+		officials = ''.ljust(30,'#') + ' OFFICIALS '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.referees:
+			officials += item.__str__()
+		for item in self.linesmen:
+			officials += item.__str__()
+
+		game_stars = ''.ljust(30,'#') + ' 3 STARS '.center(18) \
+			+ ''.ljust(30,'#') + '\n'
+		for item in self.game_stars:
+			game_stars += 'Star #:' + item[0]
+			game_stars += ' Tm:' + item[1]
+			game_stars += ' Player :' + item[2]
+			game_stars += ' ' + item[3] +'\n'
+		game_stars += "Picked by: " + self.stars_picker
+
+
+		return goals_str + away_penalties + home_penalties + \
+			away_periods + home_periods + away_powerplay + home_powerplay + \
+			away_goalies + home_goalies + officials + game_stars
 
 def chop_goals_branch (tree):
 	'''
@@ -368,3 +493,46 @@ def chop_stars_branch(tree):
 	
 	#print etree.tostring (stars_raw, pretty_print = True)
  	return picker, stars
+
+def extractor (year, game_num):
+	'''
+	Extract information from game summery html file to run tests
+	'''
+
+	tree = Operations.germinate_report_seed (year, game_num, "GS", '02')
+
+	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
+	
+	# Skipping first item in iterable roster
+	goals = chop_goals_branch (tables[2].xpath('.//tr'))
+		
+	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
+	
+	home_penalties = chop_penalties_branch (penalties_raw[0])
+	away_penalties = chop_penalties_branch (penalties_raw[1])
+
+	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
+	
+	away_periods = chop_byperiod_branch (byperiod_raw[0].xpath('./tr'))
+	home_periods = chop_byperiod_branch (byperiod_raw[1].xpath('./tr'))
+
+	powerplay_raw = tables[6].xpath('./tr/td/table/tr/td/table')
+	evenstrength_raw = tables[7].xpath('./tr/td/table/tr/td/table')
+
+	away_powerplay = chop_situation_branch (powerplay_raw[0])
+	home_powerplay = chop_situation_branch (powerplay_raw[1])
+	away_evenstrength = chop_situation_branch (evenstrength_raw[0])
+	home_evenstrength = chop_situation_branch (evenstrength_raw[1])
+
+	away_goalies, home_goalies = chop_goalie_branch (tables[8])
+
+	linesmen, referees = chop_officials_branch(tables[9])
+
+	stars_picker, game_stars = chop_stars_branch(tables[9])
+
+	return GameSummary (goals, away_penalties, home_penalties, \
+			away_periods, home_periods, away_powerplay, home_powerplay, \
+			away_evenstrength, home_evenstrength, away_goalies, home_goalies, \
+			linesmen, referees, stars_picker, game_stars)
+	
+	#print etree.tostring (item, pretty_print = True)

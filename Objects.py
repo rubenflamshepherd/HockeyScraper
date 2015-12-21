@@ -37,12 +37,13 @@ class Official:
 class Referee (Official):
 	def __str__ (self):
 
-		return "Referee: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name)
+		return "Referee: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + '\n'
 
 class Linesman (Official):
 	def __str__ (self):
 
-		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name)
+		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) + ' ' + str(self.last_name) + '\n'
+
 class Player:
 	def __init__ (self):
 		self.num = None
