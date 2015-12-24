@@ -34,6 +34,23 @@ team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
              ['capitals', 'WASHINGTON', 'CAPITALS', 'WSH'],
              ['jets', 'WINNIPEG', 'JETS', 'WPG']]
 
+def convert_month_str(month_raw):
+	month_dic = {
+		'January': 1, \
+		'February': 2, \
+		'March': 3, \
+		'April': 4, \
+		'May': 5, \
+		'June': 6, \
+		'July': 7, \
+		'August': 8, \
+		'September': 9, \
+		'October': 10, \
+		'November': 11, \
+		'December': 12, \
+		}
+	return month_dic[month_raw]
+
 def chop_on_ice_branch(tree):
 	'''
 	Given xml tree contains table of player on ice data, return that as a list
@@ -135,74 +152,6 @@ def pad_game_num (game_num):
 
 	else:
 		print "problem with padding game number (Operations.pad_game_num)"
-
-def game_info_extractor (year, game_num):
-	'''
-	Extract information about a game (attendance, home team, etc.) from an
-	standard header on html report (via an xml tree) stored as a local file.
-	Return a GameInfo object.
-	'''
-
-	file_path = "C:/Users/Ruben/Projects/HockeyScraper/Reports/" \
-					+ year + "/PL02" + game_num + ".HTM"
-	with open (file_path, 'r') as temp_file:
-		read_data = temp_file.read()
-		
-	tree = html.fromstring(read_data)
-	
-	away_info_raw = tree.xpath(
-		'//tr/td[@valign="top"]/table[@id="Visitor"]'
-		)[0]
-	away_score = away_info_raw.xpath(
-		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
-		)[0]
-	away_team_raw = away_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	away_team_game_nums = away_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-
-	home_info_raw = tree.xpath(
-		'//tr/td[@valign="top"]/table[@id="Home"]'
-		)[0]
-	home_score = home_info_raw.xpath(
-		'.//td[@style="font-size: 40px;font-weight:bold"]/text()'
-		)[0]
-	home_team_raw = home_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	home_team_game_nums = home_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-
-	game_info_raw = tree.xpath(
-		'//tr/td/table[@id="GameInfo"]'
-		)[0]
-	game_date = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[0]
-	attendance_arena = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
-	game_start_end = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[2]
-	game_num = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[3]
-	report_type = game_info_raw.xpath(
-		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[4]
-
-	away_team = team_name_to_acronym (away_team_raw)
-	home_team = team_name_to_acronym (home_team_raw)
-
-	return Objects.GameInfo (
-		game_date, attendance_arena, game_start_end, game_num,\
-		away_score, away_team, away_team_game_nums,\
-		home_score, home_team, home_team_game_nums
-		)
 
 def get_playerid(first_name, last_name):
 	'''

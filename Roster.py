@@ -214,7 +214,7 @@ def chop_ind_roster_branch (tree, team):
 
 	return roster_objects
 
-def game_personnel_creator (year, game_num):
+def harvest (year, game_num):
 	"""
 	Extract roster information from a html file on the
 	local machine and create database entries
@@ -226,8 +226,8 @@ def game_personnel_creator (year, game_num):
 
 	tables = tree.xpath('//table//table//table//table')
 
-	away_roster = ind_roster_grabber (tables, 'visitor')
-	home_roster = ind_roster_grabber (tables, 'home')
+	away_roster = chop_ind_roster_branch (tables, 'visitor')
+	home_roster = chop_ind_roster_branch (tables, 'home')
 	
 	away_coach, home_coach = chop_coach_branch(tables)
 	away_coach.team = game_info.away_team

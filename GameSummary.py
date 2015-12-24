@@ -303,7 +303,7 @@ def chop_goals_branch (tree):
 def chop_penalties_branch (tree):
 	'''
 	Given an indivudal team's penalties xml tree, return a list of
-	GameSummaryPenalty objects
+	GameSummary Penalty objects
 	'''
 	iter_penalties = iter(tree)
 	next (iter_penalties)
@@ -516,7 +516,7 @@ def chop_stars_branch(tree):
 	#print etree.tostring (stars_raw, pretty_print = True)
  	return picker, stars
 
-def harvester (year, game_num):
+def harvest (year, game_num):
 	'''
 	Extract information from game summery html file and returns a 
 	GameSummary object with which we run tests!
