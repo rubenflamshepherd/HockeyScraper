@@ -5,9 +5,9 @@ from datetime import datetime
 from pytz import timezone
 
 class GameInfo:
-	def __init__(self, game_start, game_end, time_zone, attendance, arena, game_num,\
-					 away_score, away_team, away_team_game_nums,\
-					 home_score, home_team, home_team_game_nums):
+	def __init__(self, game_start, game_end, time_zone, attendance, arena, game_num, \
+					away_score, away_team, away_team_game_num, away_team_away_game_num, \
+					home_score, home_team, home_team_game_num, home_team_home_game_num):
 		self.game_start = game_start
 		self.game_end = game_end
 		self.time_zone = time_zone
@@ -16,19 +16,35 @@ class GameInfo:
 		self.game_num = game_num
 		self.away_score = away_score
 		self.away_team = away_team
-		self.away_team_game_nums = away_team_game_nums
+		self.away_team_game_num = away_team_game_num
+		self.away_team_away_game_num = away_team_away_game_num
 		self.home_score = home_score
 		self.home_team = home_team
-		self.home_team_game_nums = home_team_game_nums
+		self.home_team_game_num = home_team_game_num
+		self.home_team_home_game_num = home_team_home_game_num
 
 	def __str__ (self):
 
-		return '\nAttendance: ' + str(self.attendance)\
-				 + '\nGame Num: ' + str(self.game_num)\
-				 + '\n' + str(self.away_team) + ' vs ' + str(self.home_team)\
-				 + '\n' + str(self.away_score) + ' - ' + str(self.home_score)\
-				 + '\nAway ' + str(self.away_team_game_nums)\
-				 + '\nHome ' + str(self.home_team_game_nums)
+		game_num = 'Game ' + self.game_num + ' | '
+		attendance_arena = str(self.attendance) + ' at ' + self.arena
+		game_start = ('\nStart ' + self.game_start.__str__()  + ' ' \
+			+ self.time_zone).ljust(35)
+		game_end = ('End ' + self.game_end.__str__() + ' ' \
+			+ self.time_zone).ljust(35)
+		team_header = '\n' + self.away_team.ljust(35) \
+			+ self.home_team.ljust(40)
+
+		away_header = ('\nGame ' + self.away_team_game_num + ' Away Game ' \
+			+ self.away_team_away_game_num).ljust(35)
+		home_header = ('Game ' + self.home_team_game_num + ' Home Game ' \
+			+ self.home_team_home_game_num).ljust(35)
+
+		score_header = '\n' + self.away_score.ljust(35) \
+			+ self.home_score.ljust(35)
+
+		return game_num + attendance_arena + game_start + game_end \
+			+ team_header + away_header + home_header + score_header
+				 
 
 
 def harvest (year, game_num, report_type, game_type):
@@ -51,10 +67,14 @@ def harvest (year, game_num, report_type, game_type):
 	away_team_raw = away_info_raw.xpath(
 		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
 		)[0]
+	
 	away_team_game_nums = away_info_raw.xpath(
 		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
+		)[1].split()
+	away_team_game_num = away_team_game_nums[1]
+	away_team_away_game_num = away_team_game_nums[-1]
 
+	print away_team_game_nums
 	home_info_raw = tree.xpath(
 		'//tr/td[@valign="top"]/table[@id="Home"]'
 		)[0]
@@ -66,7 +86,9 @@ def harvest (year, game_num, report_type, game_type):
 		)[0]
 	home_team_game_nums = home_info_raw.xpath(
 		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
-		)[1]
+		)[1].split()
+	home_team_game_num = home_team_game_nums[1]
+	home_team_away_game_num = home_team_game_nums[-1]
 
 	game_info_raw = tree.xpath(
 		'//tr/td/table[@id="GameInfo"]'
@@ -148,9 +170,9 @@ def harvest (year, game_num, report_type, game_type):
 
 	return GameInfo (
 		game_start, game_end, time_zone, attendance, arena, game_num,\
-		away_score, away_team, away_team_game_nums,\
-		home_score, home_team, home_team_game_nums
+		away_score, away_team, away_team_game_num, away_team_away_game_num,\
+		home_score, home_team, home_team_game_num, away_team_away_game_num
 		)
 
 if __name__ == '__main__':
-	print harvest ('20152016', '0003', 'PL', '02')
+	print harvest ('20152016', '0002', 'PL', '02')
