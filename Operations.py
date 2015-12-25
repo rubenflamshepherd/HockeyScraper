@@ -2,6 +2,28 @@ from lxml import html
 import Objects
 import sqlite3
 
+class OnIcePlayer:
+
+	def __init__ (self, num, pos, first_name, last_name):
+
+		self.pos = pos
+		self.first_name = first_name
+		self.last_name = last_name
+		self.num = num
+
+		self.show = self.num + ' ' + self.last_name
+				
+	def __str__ (self):
+
+		num = ("# " + self.num.encode('utf-8')).ljust(5)
+		pos = ("Pos " + self.pos.encode('utf-8')).ljust(7)
+
+		name_raw = ' ' + self.first_name.encode('utf-8') + ' ' \
+			+ self.last_name.encode('utf-8')
+		name = (name_raw).ljust(20)
+		
+		return num + pos + name + '\n'
+
 #list for [url, city, team name, team acronym]
 team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
              ['bruins', 'BOSTON', 'BRUINS', 'BOS'],
@@ -57,20 +79,25 @@ def chop_on_ice_branch(tree):
 	of the individual players
 	'''
 
-	away_on_ice = []
+	on_ice_players = []
 
-	away_players_raw = tree.xpath ('.//font')
+	players_raw = tree.xpath ('.//font')
 
 
-	for away_player in away_players_raw:
-		position_name = away_player.xpath ('./@title')
-		number = away_player.xpath ('./text()') [0]
+	for player in players_raw:
+		position_name = player.xpath ('./@title')
+		num = player.xpath ('./text()') [0]
 
-		position, name = position_name[0].split(' - ')
+		pos, name_raw = position_name[0].split(' - ')
+		name_raw = name_raw.split()
+		first_name = name_raw[0]
+		last_name = " ".join(name_raw[1:])
+		
+		on_ice_players.append (
+			OnIcePlayer(num, pos, first_name, last_name)
+			)
 
-		away_on_ice.append ([position, name, number])
-
-	return away_on_ice
+	return on_ice_players
 
 def germinate_report_seed (year, game_num, report_type, game_type):
 	'''

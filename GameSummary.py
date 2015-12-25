@@ -559,3 +559,6 @@ def harvest (year, game_num):
 			linesmen, referees, stars_picker, game_stars)
 	
 	#print etree.tostring (item, pretty_print = True)
+
+if __name__ == '__main__':
+	print harvest ("20152016", "0003")

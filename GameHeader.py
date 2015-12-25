@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from pytz import timezone
 
-class GameInfo:
+class GameHeader:
 	def __init__(self, game_start, game_end, time_zone, attendance, arena, game_num, \
 					away_score, away_team, away_team_game_num, away_team_away_game_num, \
 					home_score, home_team, home_team_game_num, home_team_home_game_num):
@@ -74,7 +74,6 @@ def harvest (year, game_num, report_type, game_type):
 	away_team_game_num = away_team_game_nums[1]
 	away_team_away_game_num = away_team_game_nums[-1]
 
-	print away_team_game_nums
 	home_info_raw = tree.xpath(
 		'//tr/td[@valign="top"]/table[@id="Home"]'
 		)[0]
@@ -111,17 +110,15 @@ def harvest (year, game_num, report_type, game_type):
 	anchor1 = attendance_raw.find(',')
 	
 	if anchor1 != -1:
-		attendance_raw = attendance_raw[:anchor1] + attendance_raw[anchor1 + 1 :]
+		attendance_raw = attendance_raw[:anchor1] \
+		+ attendance_raw[anchor1 + 1 :]
 	attendance = int(attendance_raw)
 
 	anchor2 = attendance_arena_raw.index('at') + 1
 
 	assert anchor2 != 0,"ERROR: no anchor for indexing arena name"
 	arena = " ".join (attendance_arena_raw[anchor2:])
-	print arena, attendance
-	
-	print attendance_arena_raw
-	
+		
 	game_start_end = game_info_raw.xpath(
 		'.//td[@style="font-size: 10px;font-weight:bold"]/text()'
 		)[2]
@@ -168,7 +165,7 @@ def harvest (year, game_num, report_type, game_type):
 	away_team = Operations.team_name_to_acronym (away_team_raw)
 	home_team = Operations.team_name_to_acronym (home_team_raw)
 
-	return GameInfo (
+	return GameHeader (
 		game_start, game_end, time_zone, attendance, arena, game_num,\
 		away_score, away_team, away_team_game_num, away_team_away_game_num,\
 		home_score, home_team, home_team_game_num, away_team_away_game_num

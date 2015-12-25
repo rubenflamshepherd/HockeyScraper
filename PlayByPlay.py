@@ -1,10 +1,13 @@
+import GameHeader
 import Operations
 import Objects # To be largely refactored out. MIGHT BE NECCISARY
 import re
 
 class Event:
 
-	def __init__ (self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice):
+	def __init__ (self, num, per_num, strength, time,event_type, \
+			description, away_on_ice, home_on_ice):
+
 		self.num = num
 		self.per_num = per_num
 		self.strength = strength
@@ -16,14 +19,33 @@ class Event:
 
 	def __str__ (self):
 
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
-		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
-		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')
+		event_num = ("\nE#" + self.num.encode('utf-8')).ljust(6)
+		per_num = (" P#" + self.per_num.encode('utf-8')).ljust(4)
+		strength = (" " + self.strength.encode('utf-8')).ljust(4)
+		time = ("@" + self.time.encode('utf-8')).ljust(7)
+		event_type = (self.event_type.encode('utf-8')).ljust(5)
+		description = (self.description.encode('utf-8')).ljust(35) 
 
-def playbyplay_extractor (year, game_num):
+		return event_num + per_num + strength + time + event_type + description
+
+def clone_oniceplayer (num, last_name, oniceplayers):
+	'''
+	Given a num and last name, find the corresponding player object in 
+	oniceplayers and return it
+	'''
+
+	for player in oniceplayers:
+		if player.num == num and player.last_name == last_name:
+			return player
+
+	assert True, 'ERROR: player as parsed from description not in onice list'
+
+
+def raw_harvest (year, game_num):
 	"""
 	Extract play-by-play information from a html file on the
-	local machine (in the form of events)
+	local machine (in the form of raw, unspeficied events).
+	Returns list of unspecified event objects
 	"""
 
 	tree = Operations.germinate_report_seed(year,game_num,'PL','02')
@@ -31,9 +53,7 @@ def playbyplay_extractor (year, game_num):
 	events = [] # empty list for holding unspecified events
 	
 	for item in tree.xpath('//table/tr[@class="evenColor"]'):
-	#for x in range (116, 120):
-	#   item = tree.xpath('//table/tr[@class="evenColor"]') [x]
-					
+				
 		event_raw = item.xpath('./td/text()')
 
 		num = unicode(event_raw[0])
@@ -54,24 +74,13 @@ def playbyplay_extractor (year, game_num):
 			
 		if len (players_on_ice) == 2:
 
-			away_players_raw = players_on_ice[0].xpath ('.//font')
-			for away_player in away_players_raw:
-				position_name = away_player.xpath ('./@title')
-				number = away_player.xpath ('./text()') [0]
-
-				position, name = position_name[0].split(' - ')
-
-				away_on_ice.append ([position, name, number])
+			away_on_ice = Operations.chop_on_ice_branch (
+				players_on_ice[0]
+				)
+			home_on_ice = Operations.chop_on_ice_branch (
+				players_on_ice[1]
+				)
 			
-			home_players_raw = players_on_ice[1].xpath ('.//font')
-			for home_player in home_players_raw:
-				position_name = home_player.xpath ('./@title')
-				number = home_player.xpath ('./text()') [0]
-
-				position, name = position_name[0].split(' - ')
-
-				home_on_ice.append ([position, name, number])
-
 		event = Event(
 			num, per_num, strength, time, event_type, description,\
 			away_on_ice, home_on_ice
@@ -80,7 +89,7 @@ def playbyplay_extractor (year, game_num):
 		events.append (event)	    
 	return events
 
-def event_object_extractor(event_index, event_list, game_personnel, away_team, home_team):
+def harvest(event_index, event_list, away_team, home_team):
 	'''
 	Given a string that is the description of an event, return an object of
 	that event containing all possible data
@@ -123,12 +132,12 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		if winning_team == away_team:
 			losing_team = home_team
-			winning_player = (away_num, away_name)
-			losing_player = (home_num, home_name)
+			winning_player = clone_oniceplayer(away_num, away_name, event.away_on_ice)
+			losing_player = clone_oniceplayer(home_num, home_name, event.home_on_ice)
 		else:
 			losing_team = away_team
-			winning_player = (home_num, home_name)
-			losing_player = (away_num, away_name)
+			winning_player = clone_oniceplayer(home_num, home_name, event.home_on_ice)
+			losing_player = clone_oniceplayer(away_num, away_name, event.away_on_ice)
 
 		return Objects.FaceOff(
 			event.num,\
@@ -204,22 +213,21 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		shooting_name = (" ".join(description_raw[4:anchor])).strip(',')
 
-		shooting_player = (shooting_num, shooting_name)
-
 		if shooting_team == away_team:
+			shooting_on_ice = event.away_on_ice
 			blocking_on_ice = event.home_on_ice
 			blocking_team = home_team
 		elif shooting_team == home_team:
+			shooting_on_ice = event.home_on_ice
 			blocking_on_ice = event.away_on_ice
 			blocking_team = away_team
 			
 		for player in blocking_on_ice:
-			if player[0] == 'Goalie':
-				blocking_name = " ".join(player[1].split()[1:])
-				blocking_num = player[2]
+			if player.pos == 'Goalie':
+				blocking_player = player
 
-		blocking_player = (blocking_num, blocking_name)
-
+		shooting_player = clone_oniceplayer(shooting_num, shooting_name, shooting_on_ice)
+		
 		return Objects.Shot(
 			event.num,\
 			event.per_num,\
@@ -260,6 +268,19 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 
 		blocking_player = (blocking_num, blocking_name)
 
+		if shooting_team == away_team:
+			shooting_on_ice = event.away_on_ice
+			blocking_on_ice = event.home_on_ice
+		elif shooting_team == home_team:
+			shooting_on_ice = event.home_on_ice
+			blocking_on_ice = event.away_on_ice
+		else:
+			assert False, 'ERROR: shooting_team doesnt match home or away team'
+			
+		shooting_player =  clone_oniceplayer(shooting_num, shooting_name, shooting_on_ice)
+		blocking_player =  clone_oniceplayer(blocking_num, blocking_name, blocking_on_ice)
+
+
 		return Objects.Block(
 			event.num,\
 			event.per_num,\
@@ -296,19 +317,22 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		shooting_player = (shooting_num, shooting_name)
 
 		if shooting_team == away_team:
+			shooting_on_ice = event.away_on_ice
 			blocking_on_ice = event.home_on_ice
 			blocking_team = home_team
 		elif shooting_team == home_team:
+			shooting_on_ice = event.homme_on_ice
 			blocking_on_ice = event.away_on_ice
 			blocking_team = away_team
+		else:
+			assert False, 'ERROR: shooting_team doesnt match home or away team'
 			
 		for player in blocking_on_ice:
-			if player[0] == 'Goalie':
-				blocking_name = " ".join(player[1].split()[1:])
-				blocking_num = player[2]
+			if player.pos == 'Goalie':
+				blocking_player = player
 
-		blocking_player = (blocking_num, blocking_name)
-
+		shooting_player =  clone_oniceplayer(shooting_num, shooting_name, shooting_on_ice)
+		
 		return Objects.Miss(
 			event.num,\
 			event.per_num,\
@@ -407,9 +431,9 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 				)
 
 			for player in stopping_on_ice:
-				if player[0] == 'Goalie':
-					stopping_name = " ".join(player[1].split()[1:])
-					stopping_num = player[2]
+				if player.pos == 'Goalie':
+					stopping_name = player.first_name + player.last_name
+					stopping_num = player.num
 					stopping_player = (stopping_num, stopping_name)
 
 
@@ -516,6 +540,7 @@ def event_object_extractor(event_index, event_list, game_personnel, away_team, h
 		description_raw = re.split('\W+', event.description)
 		#print description_raw
 		penalized_team = description_raw[0]
+		print penalized_team,away_team, home_team
 		if penalized_team == home_team:
 			drawing_team = away_team
 		elif penalized_team == away_team:
@@ -569,13 +594,14 @@ if __name__ == '__main__':
 
 	import Roster
 	
-	gameinfo_temp = Operations.game_info_extractor	("20152016", "0003")
-	gamepersonnel_temp = Roster.harvester ("20152016", "0003")
-	events = playbyplay_extractor ("20152016", "0003")
+	gameinfo_temp = GameHeader.harvest('20152016', '0003', 'PL', '02')
+	gamepersonnel_temp = Roster.harvest ("20152016", "0003")
+	events = raw_harvest ("20152016", "0003")
+	'''
+	for item in events:
+		print item,
+	'''
 	
-	for x in range (0, 300):
+	for x in range (0, 36):
 		
-		print event_object_extractor (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team)
-
-	print len(events)
-	
+		print harvest (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team),

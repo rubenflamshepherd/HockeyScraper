@@ -25,6 +25,15 @@ class GameSummaryVsRoster (unittest.TestCase):
 			self.assertEqual (item.first_name, temp_roster.linesmen[index].first_name)
 			self.assertEqual (item.last_name, temp_roster.linesmen[index].last_name)
 
+class GameSummaryVsPlayByPlay (unittest.TestCase):
+	'''
+	Compares data in Game Summary and PlayByPlay Files
+	'''
+
+	def test_goals (unittest.TestCase):
+		pass
+
+
 if __name__ == '__main__':
 
 	unittest.main()

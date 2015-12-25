@@ -1,3 +1,4 @@
+import GameHeader
 import Objects
 import Operations
 
@@ -220,7 +221,7 @@ def harvest (year, game_num):
 	local machine and create database entries
 	"""
 
-	game_info = Operations.game_info_extractor (year, game_num)
+	game_info = GameHeader.harvest (year, game_num, 'RO', '02')
 
 	tree = Operations.germinate_report_seed (year, game_num, "RO", '02')
 

@@ -26,7 +26,7 @@ class Linesman (Official):
 class Player:
 
 	def __init__ (self):
-		
+
 		self.num = None
 		self.height = None
 		self.weight = None
@@ -39,7 +39,6 @@ class Player:
 		self.pos = None
 		self.twitter = None
 
-
 	def __str__ (self):
 
 		return str(self.num) + '\n' + str(self.height) + '\n' \
@@ -48,35 +47,11 @@ class Player:
 			+  str(self.draft_rnd) + '\n' + str(self.draft_overall) + '\n' \
 			+ str(self.pos) + '\n' + str(self.twitter)
 
-class GameInfo:
-	def __init__(self, game_date, attendance_arena, game_start_end, game_num,\
-					 away_score, away_team, away_team_game_nums,\
-					 home_score, home_team, home_team_game_nums):
-		self.game_date = game_date
-		self.attendance_arena = attendance_arena
-		self.game_start_end = game_start_end
-		self.game_num = game_num
-		self.away_score = away_score
-		self.away_team = away_team
-		self.away_team_game_nums = away_team_game_nums
-		self.home_score = home_score
-		self.home_team = home_team
-		self.home_team_game_nums = home_team_game_nums
-
-	def __str__ (self):
-
-		return "Game Date: " + str(self.game_date)\
-				 + '\nAttendance: ' + str(self.attendance_arena)\
-				 + '\nGame Start: ' + str(self.game_start_end)\
-				 + '\nGame Num: ' + str(self.game_num)\
-				 + '\n' + str(self.away_team) + ' vs ' + str(self.home_team)\
-				 + '\n' + str(self.away_score) + ' - ' + str(self.home_score)\
-				 + '\nAway ' + str(self.away_team_game_nums)\
-				 + '\nHome ' + str(self.home_team_game_nums)
-
 class Event:
 
-	def __init__ (self, num, per_num, strength, time,event_type, description, away_on_ice, home_on_ice):
+	def __init__ (self, num, per_num, strength, time,event_type, \
+			description, away_on_ice, home_on_ice):
+
 		self.num = num
 		self.per_num = per_num
 		self.strength = strength
@@ -86,11 +61,21 @@ class Event:
 		self.away_on_ice = away_on_ice
 		self.home_on_ice = home_on_ice
 
+	def create_prefix(self):
+
+		event_num = ("\nE" + self.num.encode('utf-8')).ljust(5)
+		per_num = (" P" + self.per_num.encode('utf-8')).ljust(3)
+		strength = (" " + self.strength.encode('utf-8')).ljust(4)
+		time = ("@" + self.time.encode('utf-8')).ljust(6)
+		event_type = (self.event_type.encode('utf-8')).ljust(6)
+
+		return event_num + per_num + strength + time + event_type
+
 	def __str__ (self):
 
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
-		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
-		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')
+		description = (self.description.encode('utf-8')).ljust(35) 
+
+		return self.create_prefix() + description
 
 class PeriodStart(Event):
 
@@ -100,12 +85,13 @@ class PeriodStart(Event):
 		self.start_time = start_time
 		self.time_zone = time_zone
 	
-	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
-		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
-		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8') + '\nPeriod start: ' +\
-		 self.start_time.encode('utf-8') + '\nTime zone:' + self.time_zone.encode('utf-8')
 
+	def __str__ (self):
+
+		description = (self.start_time.__str__() + ' ' + self.time_zone).ljust(35) 
+
+		return self.create_prefix() + description
+	
 class FaceOff(Event):
 
 	def __init__ (self, num, per_num, strength, time, event_type, description, away_on_ice, home_on_ice,\
@@ -118,14 +104,12 @@ class FaceOff(Event):
 		self.losing_team = losing_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8') + ' ' + \
-		 self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8') + ' ' + \
-		 self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8') + \
-		 '\nZone: ' + self.zone.encode('utf-8') + \
-		 '\nWP: ' + self.winning_player[0].encode('utf-8') + ' ' + self.winning_player[1].encode('utf-8') + \
-		 '\nLP: ' + self.losing_player[0].encode('utf-8') + ' ' + self.losing_player[1].encode('utf-8') + \
-		 '\nWT: ' + self.winning_team.encode('utf-8') + \
-		 '\nLT: ' + self.losing_team.encode('utf-8')
+
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		winning_player = ('WP ' + self.winning_player.show).ljust(20)		
+		losing_player = ('LP ' + self.losing_player.show).ljust(20)
+
+		return self.create_prefix() + zone + winning_player + losing_player
 
 class Shot(Event):
 
@@ -141,16 +125,15 @@ class Shot(Event):
 		self.blocking_team = blocking_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
-		 + '\nDistance: ' + self.distance.encode('utf-8')\
-		 + '\nSP: ' + self.shooting_player[0].encode('utf-8') + ' ' + self.shooting_player[1].encode('utf-8')\
-		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
-		 + '\nST: ' + self.shooting_team.encode('utf-8')\
-		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
+		distance = (self.distance.encode('utf-8')).ljust(4)
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		shooting_player = ('SP ' + self.shooting_player.show).ljust(15)		
+		blocking_player = ('BP ' + self.blocking_player.show).ljust(15)
+
+		return self.create_prefix() + shot_type + distance + zone \
+			+ shooting_player + blocking_player
 
 class Block(Event):
 
@@ -165,15 +148,14 @@ class Block(Event):
 		self.blocking_team = blocking_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
-		 + '\nSP: ' + self.shooting_player[0].encode('utf-8') + ' ' + self.shooting_player[1].encode('utf-8')\
-		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
-		 + '\nST: ' + self.shooting_team.encode('utf-8')\
-		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		shooting_player = ('SP ' + self.shooting_player.show).ljust(20)		
+		blocking_player = ('BP ' + self.blocking_player.show).ljust(20)
+
+		return self.create_prefix() + shot_type + zone \
+			+ shooting_player + blocking_player
 
 class Miss(Event):
 
@@ -188,19 +170,18 @@ class Miss(Event):
 		self.blocking_player = blocking_player
 		self.shooting_team = shooting_team
 		self.blocking_team = blocking_team
-	
+
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
-		 + '\nMiss type: ' + self.miss_type.encode('utf-8')\
-		 + '\nDistance: ' + self.distance.encode('utf-8')\
-		 + '\nSP: ' + self.shooting_player[0].encode('utf-8') + ' ' + self.shooting_player[1].encode('utf-8')\
-		 + '\nBP: ' + self.blocking_player[0].encode('utf-8') + ' ' + self.blocking_player[1].encode('utf-8')\
-		 + '\nST: ' + self.shooting_team.encode('utf-8')\
-		 + '\nBT: ' + self.blocking_team.encode('utf-8')
+
+		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
+		miss_type = (self.miss_type.encode('utf-8')).ljust(8)		
+		distance = (self.distance.encode('utf-8')).ljust(4)
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		shooting_player = ('SP ' + self.shooting_player.show).ljust(15)		
+		blocking_player = ('BP ' + self.blocking_player.show).ljust(15)
+
+		return self.create_prefix() + shot_type + distance + zone + miss_type\
+			+ shooting_player + blocking_player
 
 class Hit(Event):
 
