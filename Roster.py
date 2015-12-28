@@ -54,7 +54,8 @@ class Player:
 			scratch + playerid + '\n'
 
 class GamePersonnel(object):
-	def __init__ (self, away_roster, home_roster, away_coach, home_coach, referees, linesmen):
+	def __init__ (self, away_roster, home_roster, away_coach, home_coach, \
+		referees, linesmen):
 		self.away_roster = away_roster
 		self.home_roster = home_roster
 		self.away_coach = away_coach
@@ -163,6 +164,7 @@ def chop_ind_roster_branch (tree, team):
 	for item in iter_roster:
 		
 		scratch = 0
+		captaincy = None
 		num = item.xpath('./td/text()')[0]
 		pos = item.xpath('./td/text()')[1]
 

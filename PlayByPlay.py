@@ -38,7 +38,8 @@ def clone_oniceplayer (num, last_name, oniceplayers):
 		if player.num == num and player.last_name == last_name:
 			return player
 
-	assert True, 'ERROR: player as parsed from description not in onice list'
+	# Player indicated in event description is not on ice (possible)			
+	return Operations.OnIcePlayer (num, None, None, last_name)
 
 
 def raw_harvest (year, game_num):
@@ -89,7 +90,7 @@ def raw_harvest (year, game_num):
 		events.append (event)	    
 	return events
 
-def harvest(event_index, event_list, away_team, home_team):
+def harvest(event_index, event_list, game_personnel, away_team, home_team):
 	'''
 	Given a string that is the description of an event, return an object of
 	that event containing all possible data
@@ -159,7 +160,7 @@ def harvest(event_index, event_list, away_team, home_team):
 
 		zone = description_raw[-2]
 		givetake_team = description_raw[0]
-		givietake_num = description_raw[3].strip('#')
+		givetake_num = description_raw[3].strip('#')
 
 		anchor = Operations.index_containing_substring(description_raw, ',') + 1
 
@@ -167,7 +168,13 @@ def harvest(event_index, event_list, away_team, home_team):
 
 		givetake_name = (" ".join(description_raw[4:anchor])).strip(',')
 
-		givetake_player = (givietake_num, givetake_name)
+		if givetake_team == away_team:
+			givetake_on_ice = event.away_on_ice
+		
+		elif givetake_team == home_team:
+			givetake_on_ice = event.home_on_ice
+			
+		givetake_player = clone_oniceplayer(givetake_num, givetake_name, givetake_on_ice)
 
 		if event.event_type == 'GIVE':
 			return Objects.Give(
@@ -321,7 +328,7 @@ def harvest(event_index, event_list, away_team, home_team):
 			blocking_on_ice = event.home_on_ice
 			blocking_team = home_team
 		elif shooting_team == home_team:
-			shooting_on_ice = event.homme_on_ice
+			shooting_on_ice = event.home_on_ice
 			blocking_on_ice = event.away_on_ice
 			blocking_team = away_team
 		else:
@@ -365,13 +372,22 @@ def harvest(event_index, event_list, away_team, home_team):
 
 		hitting_name = " ".join(description_raw[2:anchor1])
 
-		hitting_player = (hitting_num, hitting_name)
-
 		hit_team = description_raw[anchor1 + 1]
 		hit_num = description_raw[anchor1 + 2].strip('#')
 		hit_name = (" ".join(description_raw[anchor1 + 3: anchor2])).strip (',')
 
-		hit_player = (hit_num, hit_name)
+		if hitting_team == away_team:
+			hitting_on_ice = event.away_on_ice
+			hit_on_ice = event.home_on_ice
+			assert hit_team == home_team, "ERROR: hit team internal check failure"
+			
+		elif hitting_team == home_team:
+			hitting_on_ice = event.home_on_ice
+			hit_on_ice = event.away_on_ice
+			assert hit_team == away_team, "ERROR: hit team internal check failure"
+
+		hitting_player = clone_oniceplayer(hitting_num, hitting_name, hitting_on_ice)
+		hit_player = clone_oniceplayer(hit_num, hit_name, hit_on_ice)
 
 		return Objects.Hit(
 			event.num,\
@@ -390,7 +406,7 @@ def harvest(event_index, event_list, away_team, home_team):
 			)
 
 	elif event.event_type == 'STOP':
-		stopping_player = (None, None)
+		stopping_player = Operations.OnIcePlayer(None, None, None, None)
 		stopping_team = None
 		tv_timeout = 0
 		timeout_caller = None
@@ -432,9 +448,7 @@ def harvest(event_index, event_list, away_team, home_team):
 
 			for player in stopping_on_ice:
 				if player.pos == 'Goalie':
-					stopping_name = player.first_name + player.last_name
-					stopping_num = player.num
-					stopping_player = (stopping_num, stopping_name)
+					stopping_player = player
 
 
 		elif "ICING" in description_raw:
@@ -465,19 +479,29 @@ def harvest(event_index, event_list, away_team, home_team):
 
 	elif event.event_type == 'GOAL':
 
-		prim_assist_player = (None, None)
-		sec_assist_player = (None, None)
+		prim_assist_player = Operations.OnIcePlayer(None, None, None, None)
+		sec_assist_player = Operations.OnIcePlayer(None, None, None, None)
 
 		scoring_team = description_raw[0]
 		scoring_num = description_raw[1].strip('#')
 
+		if scoring_team == away_team:
+			scoring_on_ice = event.away_on_ice
+			defending_on_ice = event.home_on_ice
+			defending_team = away_team
+						
+		elif scoring_team == home_team:
+			scoring_on_ice = event.home_on_ice
+			defending_on_ice = event.away_on_ice
+			defending_team = home_team
+			
 		anchor1 = Operations.index_containing_substring(description_raw, ',') + 1
 		anchor2 = Operations.index_containing_substring(description_raw[anchor1:], ',') + 1
 		anchor3 = Operations.index_containing_substring(description_raw, 'ft.')
 
 		scoring_name = (" ".join(description_raw[2:anchor1]))[:-4]
-		scoring_player = (scoring_num, scoring_name)
-
+		scoring_player = clone_oniceplayer(scoring_num, scoring_name, scoring_on_ice)
+		
 		shot_type = (" ".join(description_raw[anchor1:anchor1+anchor2])).strip(',')
 		distance = description_raw[anchor3 - 1]
 		zone = description_raw[anchor3 - 3]
@@ -487,7 +511,7 @@ def harvest(event_index, event_list, away_team, home_team):
 			
 			prim_assist_num = description_raw[anchor4].strip('#')
 			prim_assist_name = (" ".join(description_raw[anchor4 + 1:]))[:-3]
-			prim_assist_player = (prim_assist_num, prim_assist_name)
+			prim_assist_player = clone_oniceplayer(prim_assist_num, prim_assist_name, scoring_on_ice)
 			
 		elif 'Assists:' in description_raw:
 			anchor4 = Operations.index_containing_substring(description_raw, 'Assists:') + 1
@@ -495,25 +519,15 @@ def harvest(event_index, event_list, away_team, home_team):
 			
 			prim_assist_num = description_raw[anchor4].strip('#')
 			prim_assist_name = (" ".join(description_raw[anchor4 + 1:anchor5]))[:-4]
-			prim_assist_player = (prim_assist_num, prim_assist_name)
+			prim_assist_player = clone_oniceplayer(prim_assist_num, prim_assist_name, scoring_on_ice)
 
 			sec_assist_num = description_raw[anchor5].strip('#')
 			sec_assist_name = (" ".join(description_raw[anchor5 + 1:]))[:-3]
-			sec_assist_player = (sec_assist_num, sec_assist_name)
-			
-		if scoring_team == home_team:
-			defending_on_ice = event.away_on_ice
-			defending_team = away_team
-		elif scoring_team == away_team:
-			defending_on_ice = event.home_on_ice
-			defending_team = home_team
+			sec_assist_player = clone_oniceplayer(sec_assist_num, sec_assist_name, scoring_on_ice)
 
 		for player in defending_on_ice:
-			if player[0] == 'Goalie':
-				goalie_name = " ".join(player[1].split()[1:])
-				goalie_num = player[2]
-				goalie = (goalie_num, goalie_name)
-		#print goalie
+			if player.pos == 'Goalie':
+				goalie = player
 
 		return Objects.Goal(
 			event.num,\
@@ -538,13 +552,16 @@ def harvest(event_index, event_list, away_team, home_team):
 	elif event.event_type == 'PENL':
 
 		description_raw = re.split('\W+', event.description)
-		#print description_raw
 		penalized_team = description_raw[0]
-		print penalized_team,away_team, home_team
+		
 		if penalized_team == home_team:
 			drawing_team = away_team
+			drawing_on_ice = event.away_on_ice
+			penalized_on_ice = event.home_on_ice
 		elif penalized_team == away_team:
 			drawing_team = home_team
+			drawing_on_ice = event.home_on_ice
+			penalized_on_ice = event.away_on_ice
 
 		penalized_num = description_raw[1].strip('#')
 
@@ -554,7 +571,7 @@ def harvest(event_index, event_list, away_team, home_team):
 				break
 
 		penalized_name = " ".join(description_raw[2:anchor1])
-		penalized_player = (penalized_num, penalized_name)
+		penalized_player = clone_oniceplayer(penalized_num, penalized_name, penalized_on_ice)
 		
 		anchor2 = description_raw.index('min') -1
 		length = description_raw [anchor2]
@@ -567,10 +584,10 @@ def harvest(event_index, event_list, away_team, home_team):
 			anchor4 = description_raw.index('By') + 1
 			drawing_num = description_raw [anchor4 + 1].strip('#')
 			drawing_name = " ".join(description_raw [anchor4 + 2:]).strip('#')
-			drawing_player = (drawing_num, drawing_name)
+			drawing_player = clone_oniceplayer(drawing_num, drawing_name, drawing_on_ice)
 
 		except ValueError:
-			drawing_player = (None, None)
+			drawing_player = Operations.OnIcePlayer(None, None, None, None)
 
 		return Objects.Penalty(
 			event.num,\
@@ -593,15 +610,20 @@ def harvest(event_index, event_list, away_team, home_team):
 if __name__ == '__main__':
 
 	import Roster
+
+	year = '20152016'
+	game_num = '0001'
+	report_type = 'PL'
+	game_type = '02'
 	
-	gameinfo_temp = GameHeader.harvest('20152016', '0003', 'PL', '02')
-	gamepersonnel_temp = Roster.harvest ("20152016", "0003")
-	events = raw_harvest ("20152016", "0003")
+	gameinfo_temp = GameHeader.harvest(year, game_num, report_type, game_type)
+	gamepersonnel_temp = Roster.harvest (year, game_num)
+	events = raw_harvest (year, game_num)
 	'''
 	for item in events:
 		print item,
 	'''
 	
-	for x in range (0, 36):
-		
-		print harvest (x, events, gameinfo_temp.away_team, gameinfo_temp.home_team),
+	for x in range (0, len(events)):
+		if events[x].event_type == 'STOP':
+			print harvest (x, events, gamepersonnel_temp, gameinfo_temp.away_team, gameinfo_temp.home_team),

@@ -66,7 +66,7 @@ class Event:
 		event_num = ("\nE" + self.num.encode('utf-8')).ljust(5)
 		per_num = (" P" + self.per_num.encode('utf-8')).ljust(3)
 		strength = (" " + self.strength.encode('utf-8')).ljust(4)
-		time = ("@" + self.time.encode('utf-8')).ljust(6)
+		time = ("@" + self.time.encode('utf-8')).ljust(7)
 		event_type = (self.event_type.encode('utf-8')).ljust(6)
 
 		return event_num + per_num + strength + time + event_type
@@ -174,7 +174,7 @@ class Miss(Event):
 	def __str__ (self):
 
 		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
-		miss_type = (self.miss_type.encode('utf-8')).ljust(8)		
+		miss_type = (self.miss_type.encode('utf-8')).ljust(7)		
 		distance = (self.distance.encode('utf-8')).ljust(4)
 		zone = (self.zone.encode('utf-8')).ljust(5)		
 		shooting_player = ('SP ' + self.shooting_player.show).ljust(15)		
@@ -195,14 +195,12 @@ class Hit(Event):
 		self.hit_team = hit_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nHittingP: ' + self.hitting_player[0].encode('utf-8') + ' ' + self.hitting_player[1].encode('utf-8')\
-		 + '\nHitP: ' + self.hit_player[0].encode('utf-8') + ' ' + self.hit_player[1].encode('utf-8')\
-		 + '\nHittingT: ' + self.hitting_team.encode('utf-8')\
-		 + '\nHitT: ' + self.hit_team.encode('utf-8')
+
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		hitting_player = ('Hitting ' + self.hitting_player.show).ljust(22)		
+		hit_player = ('Hit ' + self.hit_player.show).ljust(22)
+
+		return self.create_prefix() + zone + hitting_player + hit_player
 
 class Stop(Event):
 
@@ -216,14 +214,15 @@ class Stop(Event):
 		self.timeout_caller = timeout_caller
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nDESCR Parsed: ' + self.description_parsed.encode('utf-8')\
-		 + '\nST: ' + str(self.stopping_team)\
-		 + '\nSP: ' + str(self.stopping_player[0]) + ' ' + str(self.stopping_player[1])\
-		 + '\nTVTO: ' + str(self.tv_timeout)\
-		 + '\nTO Caller: ' + str(self.timeout_caller)
+
+		description_parsed = self.description_parsed.ljust(20)
+		stopping_player = ('By ' + str(self.stopping_team) + ' '\
+			+ str(self.stopping_player.show)).ljust(19)
+		tv_timeout = ('TVTO ' + str(self.tv_timeout)).ljust(8)
+		to_caller = ('TOBy ' + str(self.timeout_caller)).ljust(15)
+
+		return self.create_prefix() + description_parsed + stopping_player \
+			+ tv_timeout + to_caller
 
 class Give(Event):
 
@@ -235,12 +234,11 @@ class Give(Event):
 		self.giving_team = giving_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nPlayer: ' + self.giving_player[0].encode('utf-8') + ' ' + self.giving_player[1].encode('utf-8')\
-		 + '\nTeam: ' + self.giving_team.encode('utf-8')
+
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		giving_player = ('By ' + self.giving_player.show).ljust(25)		
+		
+		return self.create_prefix() + zone + giving_player
 
 class Take(Event):
 
@@ -252,12 +250,11 @@ class Take(Event):
 		self.taking_team = taking_team
 	
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nPlayer: ' + self.taking_player[0].encode('utf-8') + ' ' + self.taking_player[1].encode('utf-8')\
-		 + '\nTeam: ' + self.taking_team.encode('utf-8')
+		
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		taking_player = ('By ' + self.taking_player.show).ljust(25)		
+		
+		return self.create_prefix() + zone + taking_player
 
 class Goal(Event):
 
@@ -276,17 +273,19 @@ class Goal(Event):
 		self.defending_team = defending_team
 
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nShot type: ' + self.shot_type.encode('utf-8')\
-		 + '\nDistance: ' + self.distance.encode('utf-8')\
-		 + '\nSP: ' + str(self.scoring_player[0]) + ' ' + str(self.scoring_player[1])\
-		 + '\nPA: ' + str(self.prim_assist_player[0]) + ' ' + str(self.prim_assist_player[1])\
-		 + '\nSA: ' + str(self.sec_assist_player[0]) + ' ' + str(self.sec_assist_player[1])\
-		 + '\nGoalie: ' + str(self.goalie[0]) + ' ' + str(self.goalie[1])\
-		 + '\nDT: ' + self.defending_team.encode('utf-8')
+
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
+		distance = (self.distance.encode('utf-8') + 'ft').ljust(5)
+		scoring_player = ('SP ' + self.scoring_player.show).ljust(15)		
+		prim_assist_player = ('PA ' + self.prim_assist_player.show).ljust(15)		
+		sec_assist_player = ('SA ' + self.sec_assist_player.show).ljust(15)		
+		goalie = ('G ' + self.goalie.show).ljust(15)		
+
+
+		return self.create_prefix() + zone + shot_type + distance \
+			+ scoring_player + prim_assist_player + sec_assist_player \
+			+ goalie
 
 class Penalty(Event):
 
@@ -302,13 +301,14 @@ class Penalty(Event):
 		self.drawing_team = drawing_team
 
 	def __str__ (self):
-		return self.num.encode('utf-8') + ' ' + self.per_num.encode('utf-8')\
-		 + ' ' + self.strength.encode('utf-8') + ' ' + self.time.encode('utf-8')\
-		 + ' ' + self.event_type.encode('utf-8') + ' ' + self.description.encode('utf-8')\
-		 + '\nZone: ' + self.zone.encode('utf-8')\
-		 + '\nPenalty type: ' + self.penalty_type.encode('utf-8')\
-		 + '\nLength: ' + self.length.encode('utf-8')\
-		 + '\nPP: ' + str(self.penalized_player[0]) + ' ' + str(self.penalized_player[1])\
-		 + '\nDP: ' + str(self.drawing_player[0]) + ' ' + str(self.drawing_player[1])\
-		 + '\nPT: ' + str(self.penalized_team)\
-		 + '\nDT: ' + str(self.drawing_team)
+
+		zone = (self.zone.encode('utf-8')).ljust(5)		
+		penalty_type = (self.penalty_type.encode('utf-8')).ljust(10)		
+		length = (self.length.encode('utf-8')).ljust(4)
+		penalized_player = ('To ' + self.penalized_team + ' ' \
+			+ self.penalized_player.show).ljust(15)		
+		drawing_player = ('D By ' + self.drawing_team + ' ' \
+			+ self.drawing_player.show).ljust(15)		
+		
+		return self.create_prefix() + zone + penalty_type + length \
+			+ penalized_player + drawing_player

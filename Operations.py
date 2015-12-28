@@ -11,15 +11,15 @@ class OnIcePlayer:
 		self.last_name = last_name
 		self.num = num
 
-		self.show = self.num + ' ' + self.last_name
+		self.show = str(self.num) + ' ' + str(self.last_name)
 				
 	def __str__ (self):
 
-		num = ("# " + self.num.encode('utf-8')).ljust(5)
-		pos = ("Pos " + self.pos.encode('utf-8')).ljust(7)
+		num = ("# " + str(self.num).encode('utf-8')).ljust(5)
+		pos = ("Pos " + str(self.pos).encode('utf-8')).ljust(7)
 
-		name_raw = ' ' + self.first_name.encode('utf-8') + ' ' \
-			+ self.last_name.encode('utf-8')
+		name_raw = ' ' + str(self.first_name).encode('utf-8') + ' ' \
+			+ str(self.last_name).encode('utf-8')
 		name = (name_raw).ljust(20)
 		
 		return num + pos + name + '\n'
