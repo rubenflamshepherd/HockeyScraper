@@ -24,9 +24,10 @@ class Coach:
 
 class Player:
 
-	def __init__ (self, num, pos, first_name, last_name, captaincy, starting, \
+	def __init__ (self, team, num, pos, first_name, last_name, captaincy, starting, \
 			scratch, playerid):
 
+		self.team = team
 		self.num = num
 		self.pos = pos
 		self.first_name = first_name
@@ -36,14 +37,16 @@ class Player:
 		self.scratch = scratch
 		self.playerid = playerid
 
+		self.show = str(self.num) + ' ' + str(self.last_name)
+
 	def __str__ (self):
 
-		num = ("# " + self.num.encode('utf-8')).ljust(5)
-		pos = ("Pos " + self.pos.encode('utf-8')).ljust(7)
+		num = ("#" + self.num.encode('utf-8')).ljust(4)
+		pos = ("Pos " + self.pos.encode('utf-8')).ljust(6)
 
-		name_raw = self.first_name.encode('utf-8') + ' ' \
+		name_raw = self.team + ' ' + self.first_name.encode('utf-8') + ' ' \
 			+ self.last_name.encode('utf-8')
-		name = (name_raw).ljust(20)
+		name = (name_raw).ljust(25)
 
 		captaincy = ("A/C " + str(self.captaincy)).ljust(9)
 		starting = ("Strt " + str(self.starting)).ljust(9)
@@ -92,6 +95,9 @@ class GamePersonnel(object):
 
 		return away_roster + home_roster + away_coach + home_coach + \
 			officials
+
+def return_null_player():
+	return Player (None, None, None, None, None, None, None, None, None)
 
 def chop_coach_branch (tree):
 	'''
@@ -145,14 +151,15 @@ def chop_officials_branch (tree):
 
 	return referees, linesmen
 		
-def chop_ind_roster_branch (tree, team):
+def chop_ind_roster_branch (tree, anchor, team):
 	"""
 	Extract indivudal information from an xml tree and return list 
-	of roster objects. team is home or away
+	of roster objects. anchor is 'visitor' or 'home' (used to anchor xml tree)
 	"""
+
 	roster_objects = []
 
-	if team == 'home':
+	if anchor == 'home':
 		x, y = 6, 8
 	else:
 		x, y = 5, 7
@@ -189,7 +196,7 @@ def chop_ind_roster_branch (tree, team):
 
 		playerid = Operations.get_playerid (first_name, last_name)
 
-		roster_objects.append(Player(num, pos, first_name, last_name, \
+		roster_objects.append(Player(team, num, pos, first_name, last_name, \
 			captaincy, starting, scratch, playerid))
 		#print etree.tostring (item, pretty_print = True)
 
@@ -212,7 +219,7 @@ def chop_ind_roster_branch (tree, team):
 
 		playerid = Operations.get_playerid (first_name, last_name)
 
-		roster_objects.append(Player(num, pos, first_name, last_name, \
+		roster_objects.append(Player(team, num, pos, first_name, last_name, \
 			captaincy, starting, scratch, playerid))
 
 	return roster_objects
@@ -229,8 +236,8 @@ def harvest (year, game_num):
 
 	tables = tree.xpath('//table//table//table//table')
 
-	away_roster = chop_ind_roster_branch (tables, 'visitor')
-	home_roster = chop_ind_roster_branch (tables, 'home')
+	away_roster = chop_ind_roster_branch (tables, 'visitor', game_info.away_team)
+	home_roster = chop_ind_roster_branch (tables, 'home', game_info.home_team)
 	
 	away_coach, home_coach = chop_coach_branch(tables)
 	away_coach.team = game_info.away_team
@@ -243,4 +250,4 @@ def harvest (year, game_num):
 		)
 
 if __name__ == '__main__':
-	print game_personnel_creator('20152016', '0003')
+	print harvest('20152016', '0003')

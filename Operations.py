@@ -1,28 +1,7 @@
 from lxml import html
+from Roster import Player
 import Objects
 import sqlite3
-
-class OnIcePlayer:
-
-	def __init__ (self, num, pos, first_name, last_name):
-
-		self.pos = pos
-		self.first_name = first_name
-		self.last_name = last_name
-		self.num = num
-
-		self.show = str(self.num) + ' ' + str(self.last_name)
-				
-	def __str__ (self):
-
-		num = ("# " + str(self.num).encode('utf-8')).ljust(5)
-		pos = ("Pos " + str(self.pos).encode('utf-8')).ljust(7)
-
-		name_raw = ' ' + str(self.first_name).encode('utf-8') + ' ' \
-			+ str(self.last_name).encode('utf-8')
-		name = (name_raw).ljust(20)
-		
-		return num + pos + name + '\n'
 
 #list for [url, city, team name, team acronym]
 team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
@@ -73,10 +52,24 @@ def convert_month_str(month_raw):
 		}
 	return month_dic[month_raw]
 
-def chop_on_ice_branch(tree):
+def clone_rosterplayer (num, pos, first_name, last_name, roster):
+	'''
+	Given basic player information, match that to a Roster.Player object in 
+	roster and return that object
+	'''
+	for player in roster:
+				
+		if player.num == num and \
+			player.pos == pos and \
+			player.first_name == first_name and \
+			player.last_name == last_name:
+
+			return player
+
+def chop_on_ice_branch(tree, roster):
 	'''
 	Given xml tree contains table of player on ice data, return that as a list
-	of the individual players
+	of the individual Roster.Player objects
 	'''
 
 	on_ice_players = []
@@ -88,14 +81,16 @@ def chop_on_ice_branch(tree):
 		position_name = player.xpath ('./@title')
 		num = player.xpath ('./text()') [0]
 
-		pos, name_raw = position_name[0].split(' - ')
+		pos_raw, name_raw = position_name[0].split(' - ')
 		name_raw = name_raw.split()
+
+		pos = pos_raw[0]
 		first_name = name_raw[0]
 		last_name = " ".join(name_raw[1:])
+
+		temp_player = clone_rosterplayer(num, pos, first_name, last_name, roster)
 		
-		on_ice_players.append (
-			OnIcePlayer(num, pos, first_name, last_name)
-			)
+		on_ice_players.append (temp_player)
 
 	return on_ice_players
 

@@ -60,8 +60,8 @@ class Penalty(object):
 		per_num = ("Per#: " + self.per_num.encode('utf-8')).ljust(8)
 		pen_time = ("Time: " + self.pen_time.encode('utf-8')).ljust(12)
 		pen_length = ("Len: " + self.pen_length.encode('utf-8')).ljust(8)
-		penalized_player = ('PP: ' + str(self.penalized_player[0]) + ' ' \
-			+ str(self.penalized_player[1])).ljust(17)
+		penalized_player = ('PP: ' + str(self.penalized_player.num) + ' ' \
+			+ str(self.penalized_player.last_name)).ljust(17)
 		pen_type = ("Type: " + self.pen_type.encode('utf-8')).ljust(10)
 
 		return pen_num + per_num + pen_time + pen_length + penalized_player \
@@ -312,7 +312,7 @@ def chop_goals_branch (tree):
 				sec_assist_name)
 
 		except:
-			sec_assist_player = (None, None, None)
+			sec_assist_player = Player(None, None, None)
 		
 		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8])
 		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
@@ -343,8 +343,9 @@ def chop_penalties_branch (tree):
 		
 		player_raw = item.xpath('./td/table/tr/td/text()')
 		player_num = player_raw[0]
+		player_initial = player_raw[3][0]
 		player_name = player_raw[3][2:] # First inital infront of name
-		penalized_player = (player_num, player_name) 
+		penalized_player = Player(player_num, player_initial, player_name) 
 
 		temp = Penalty(
 			pen_num, per_num, pen_time, pen_length, pen_type, penalized_player

@@ -40,21 +40,65 @@ class GameSummaryVsPlayByPlay (unittest.TestCase):
 		del self.playbyplay
 
 	def test_goals (self):
-		for index, goal in enumerate(self.playbyplay.goals):
-			print goal	
 
+		self.assertEqual (len(self.playbyplay.goals), len (self.game_summary.goals))
+
+		for index, pbp_goal in enumerate(self.playbyplay.goals):
+			gs_goal = self.game_summary.goals[index]
+			
+			self.assertEqual (
+				gs_goal.scoring_player.num, \
+				pbp_goal.scoring_player.num
+				)
+			self.assertEqual (
+				gs_goal.scoring_player.first_initial, \
+				pbp_goal.scoring_player.first_name[0]
+				)
+			self.assertEqual (
+				gs_goal.scoring_player.last_name, \
+				pbp_goal.scoring_player.last_name
+				)
+
+			self.assertEqual (
+				gs_goal.prim_assist_player.num, \
+				pbp_goal.prim_assist_player.num
+				)
+			if pbp_goal.prim_assist_player.first_name == None:
+				self.assertEqual (
+					gs_goal.prim_assist_player.first_initial, \
+					pbp_goal.prim_assist_player.first_name,
+					pbp_goal.prim_assist_player.__str__() + '\n' \
+						+ gs_goal.prim_assist_player.__str__()
+					)
+			else:
+				self.assertEqual (
+					gs_goal.prim_assist_player.first_initial, \
+					pbp_goal.prim_assist_player.first_name[0]
+					)
+			self.assertEqual (
+				gs_goal.prim_assist_player.last_name, \
+				pbp_goal.prim_assist_player.last_name
+				)
+
+			self.assertEqual (
+				gs_goal.sec_assist_player.num, \
+				pbp_goal.sec_assist_player.num
+				)
+			if pbp_goal.sec_assist_player.first_name == None:
+				self.assertEqual (
+					gs_goal.sec_assist_player.first_initial, \
+					pbp_goal.sec_assist_player.first_name
+					)
+			else:
+				self.assertEqual (
+					gs_goal.sec_assist_player.first_initial, \
+					pbp_goal.sec_assist_player.first_name[0]
+					)
+			self.assertEqual (
+				gs_goal.sec_assist_player.last_name, \
+				pbp_goal.sec_assist_player.last_name
+				)
 
 if __name__ == '__main__':
 
 	unittest.main()
-
-	'''
-	for item in temp_gamesummmary.referees:
-		print item
-
-	for item in temp_roster.referees:
-		print item
-
-	'''
-
-
