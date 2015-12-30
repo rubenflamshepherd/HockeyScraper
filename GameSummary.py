@@ -2,6 +2,14 @@ from lxml import html, etree
 import Operations
 import Objects
 
+class Player(object):
+	def __init__ (self, num, first_initial, last_name):
+
+		self.num = num
+		self.first_initial = first_initial
+		self.last_name = last_name
+
+
 class Goal (object):
 
 	def __init__(self, goal_num, per_num, time, strength, scoring_team, \
@@ -25,12 +33,12 @@ class Goal (object):
 		per_num = ("P#: " + self.per_num.encode('utf-8')).ljust(6)
 		strength = ("Str: " + self.strength.encode('utf-8')).ljust(8)
 		scoring_team = ('Tm: ' + self.scoring_team.encode('utf-8')).ljust(8)
-		scoring_player = ('SP: ' + str(self.scoring_player[0]) + ' ' \
-			+ str(self.scoring_player[1])).ljust(17)
-		prim_assist_player = ('PA: ' + str(self.prim_assist_player[0]) + ' ' \
-			+ str(self.prim_assist_player[1])).ljust(17)
-		sec_assist_player = ('SA: ' + str(self.sec_assist_player[0]) + ' ' \
-			+ str(self.sec_assist_player[1])).ljust(17)
+		scoring_player = ('SP: ' + str(self.scoring_player.num) + ' ' \
+			+ str(self.scoring_player.last_name)).ljust(17)
+		prim_assist_player = ('PA: ' + str(self.prim_assist_player.num) + ' ' \
+			+ str(self.prim_assist_player.last_name)).ljust(17)
+		sec_assist_player = ('SA: ' + str(self.sec_assist_player.num) + ' ' \
+			+ str(self.sec_assist_player.last_name)).ljust(17)
 
 		return goal_num + per_num + strength + scoring_team + scoring_player \
 			+ prim_assist_player + sec_assist_player + '\n'
@@ -259,37 +267,52 @@ def chop_goals_branch (tree):
 		time = temp_goal[2]
 		strength = temp_goal[3]
 		scoring_team = temp_goal[4]
-		
+
 		scoring_player_raw = temp_goal [5].split()
 		scoring_num = scoring_player_raw[0]
+		
 		name_raw = scoring_player_raw[1]
-		scoring_name = name_raw[name_raw.find(".") + 1:name_raw.find("(")]
+		anchor1 = name_raw.find(".")
+		anchor2 = name_raw.find("(")
 
-		scoring_player = (scoring_num, scoring_name)
+		scoring_initial = name_raw[:anchor1]
+		scoring_name = name_raw[anchor1 + 1: anchor2]
+		
+		scoring_player = Player(scoring_num, scoring_initial, scoring_name)
 		
 		try:
 			prim_assist_player_raw = temp_goal [6].split()
 			prim_assist_num = prim_assist_player_raw[0]
-			name_raw = prim_assist_player_raw[1]
-			prim_assist_name = name_raw[name_raw.find(".") \
-				+ 1:name_raw.find("(")]
 
-			prim_assist_player = (prim_assist_num, prim_assist_name)
+			name_raw = prim_assist_player_raw[1]
+			anchor1 = name_raw.find(".")
+			anchor2 = name_raw.find("(")
+
+			prim_assist_initial = name_raw[:anchor1]
+			prim_assist_name = name_raw[anchor1 + 1: anchor2]
+
+			prim_assist_player = Player (prim_assist_num, prim_assist_initial, \
+				prim_assist_name)
 
 		except:
-			prim_assist_player = (None, None)
+			prim_assist_player = Player (None, None, None)
 		
 		try:
 			sec_assist_player_raw = temp_goal [7].split()
 			sec_assist_num = sec_assist_player_raw[0]
+			
 			name_raw = sec_assist_player_raw[1]
-			sec_assist_name = name_raw[name_raw.find(".") \
-				+ 1:name_raw.find("(")]
+			anchor1 = name_raw.find(".")
+			anchor2 = name_raw.find("(")
 
-			sec_assist_player = (sec_assist_num, sec_assist_name)
+			sec_assist_initial = name_raw[:anchor1]
+			sec_assist_name = name_raw[anchor1 + 1: anchor2]
+
+			sec_assist_player = Player (sec_assist_num, sec_assist_initial, \
+				sec_assist_name)
 
 		except:
-			sec_assist_player = (None, None)
+			sec_assist_player = (None, None, None)
 		
 		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8])
 		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
