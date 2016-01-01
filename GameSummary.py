@@ -1,15 +1,16 @@
 from lxml import html, etree
 import Operations
 import Objects
+import Roster
 
 class Goal (object):
 
-	def __init__(self, goal_num, per_num, time, strength, scoring_team, \
+	def __init__(self, goal_num, period_num, time, strength, scoring_team, \
 		scoring_player, prim_assist_player, sec_assist_player, \
 		away_on_ice, home_on_ice):
 
 		self.goal_num = goal_num
-		self.per_num = per_num
+		self.period_num = period_num
 		self.time = time
 		self.strength = strength
 		self.scoring_team = scoring_team
@@ -22,7 +23,7 @@ class Goal (object):
 	def __str__ (self):
 
 		goal_num = ("G#: " + self.goal_num.encode('utf-8')).ljust(6)
-		per_num = ("P#: " + self.per_num.encode('utf-8')).ljust(6)
+		period_num = ("P#: " + self.period_num.encode('utf-8')).ljust(6)
 		strength = ("Str: " + self.strength.encode('utf-8')).ljust(8)
 		scoring_team = ('Tm: ' + self.scoring_team.encode('utf-8')).ljust(8)
 		scoring_player = ('SP: ' + str(self.scoring_player.num) + ' ' \
@@ -32,37 +33,37 @@ class Goal (object):
 		sec_assist_player = ('SA: ' + str(self.sec_assist_player.num) + ' ' \
 			+ str(self.sec_assist_player.last_name)).ljust(17)
 
-		return goal_num + per_num + strength + scoring_team + scoring_player \
+		return goal_num + period_num + strength + scoring_team + scoring_player \
 			+ prim_assist_player + sec_assist_player + '\n'
 
 class Penalty(object):
 
-	def __init__(self, pen_num, per_num, pen_time, pen_length, \
-		pen_type, penalized_player):
+	def __init__(self, penalty_num, period_num, time, length, \
+		penalty_type, penalized_player):
 
-		self.pen_num = pen_num
-		self.per_num = per_num
-		self.pen_time = pen_time
-		self.pen_length = pen_length
-		self.pen_type = pen_type
+		self.penalty_num = penalty_num
+		self.period_num = period_num
+		self.time = time
+		self.length = length
+		self.penalty_type = penalty_type
 		self.penalized_player = penalized_player
 
 	def __str__ (self):
-		pen_num = ("Pen#: " + self.pen_num.encode('utf-8')).ljust(8)
-		per_num = ("Per#: " + self.per_num.encode('utf-8')).ljust(8)
-		pen_time = ("Time: " + self.pen_time.encode('utf-8')).ljust(12)
-		pen_length = ("Len: " + self.pen_length.encode('utf-8')).ljust(8)
+		pen_num = ("Pen#: " + self.penalty_num.encode('utf-8')).ljust(8)
+		period_num = ("Per#: " + self.period_num.encode('utf-8')).ljust(8)
+		pen_time = ("Time: " + self.time.encode('utf-8')).ljust(12)
+		pen_length = ("Len: " + self.length.encode('utf-8')).ljust(8)
 		penalized_player = ('PP: ' + str(self.penalized_player.num) + ' ' \
 			+ str(self.penalized_player.last_name)).ljust(17)
-		pen_type = ("Type: " + self.pen_type.encode('utf-8')).ljust(10)
+		pen_type = ("Type: " + self.penalty_type.encode('utf-8')).ljust(10)
 
-		return pen_num + per_num + pen_time + pen_length + penalized_player \
+		return pen_num + period_num + pen_time + pen_length + penalized_player \
 			+ pen_type + '\n'
 
 class Period(object):
 
-	def __init__(self, per_num, num_goals, num_shots, num_penalties, PIM):
-		self.per_num = per_num
+	def __init__(self, period_num, num_goals, num_shots, num_penalties, PIM):
+		self.period_num = period_num
 		self.num_goals = num_goals
 		self.num_shots = num_shots
 		self.num_penalties = num_penalties
@@ -70,16 +71,17 @@ class Period(object):
 
 	def __str__ (self):
 
-		per_num = ("Per#: " + self.per_num.encode('utf-8')).ljust(8)
+		period_num = ("Per#: " + self.period_num.encode('utf-8')).ljust(8)
 		num_goals = ("#G: " + self.num_goals.encode('utf-8')).ljust(8)
 		num_shots = ("#S: " + self.num_shots.encode('utf-8')).ljust(8)
 		num_penalties = ("#Pen: " + self.num_penalties.encode('utf-8')) \
 			.ljust(8)
 		PIM = ("PIM: " + self.PIM.encode('utf-8')).ljust(8)
 
-		return per_num + num_goals + num_shots + num_penalties + PIM + '\n'
+		return period_num + num_goals + num_shots + num_penalties + PIM + '\n'
 		
 class Situation (object):
+
 	def __init__(self, strength, num_goals, num_occurances, time):
 		self.strength = strength
 		self.num_goals = num_goals
@@ -97,6 +99,7 @@ class Situation (object):
 		return strength + num_goals + num_occurances + time + '\n'
 
 class Goalie (object):
+
 	def __init__(self, num, first_name, last_name, status, fields_list):
 		self.num = num
 		self.first_name = first_name
@@ -131,6 +134,7 @@ class Goalie (object):
 		return header + '\n' + data + '\n'
 	
 class GoalieField (object):
+
 	def __init__(self, field_title, field_content):
 		self.field_title = field_title
 		self.field_content = field_content
@@ -140,6 +144,7 @@ class GoalieField (object):
 		self.field_content.encode('utf-8')
 
 class GameSummary (object):
+	
 	def __init__(self, goals, away_penalties, home_penalties, \
 		away_periods, home_periods, away_powerplay, home_powerplay, \
 		away_evenstrength, home_evenstrength, away_goalies, home_goalies, \
@@ -268,7 +273,7 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 		temp_xpath = item.xpath('.//td')
 		
 		goal_num = temp_goal[0]
-		per_num = temp_goal[1]
+		period_num = temp_goal[1]
 		time = temp_goal[2]
 		strength = temp_goal[3]
 		scoring_team = temp_goal[4]
@@ -306,8 +311,6 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 			prim_assist_initial = name_raw[:anchor1]
 			prim_assist_last_name = name_raw[anchor1 + 1: anchor2]
 
-			print prim_assist_num, prim_assist_last_name
-
 			prim_assist_player = clone_rosterplayer (
 				prim_assist_num, \
 				prim_assist_last_name, \
@@ -340,7 +343,7 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8], away_roster)
 		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9], home_roster)
 
-		goals.append(Goal(goal_num, per_num, time, strength, scoring_team, \
+		goals.append(Goal(goal_num, period_num, time, strength, scoring_team, \
 			scoring_player, prim_assist_player, sec_assist_player, \
 			away_on_ice, home_on_ice))
 
@@ -359,7 +362,7 @@ def chop_penalties_branch (tree, roster):
 	for item in iter_penalties:
 		item_parts = item.xpath('./td/text()')
 		pen_num = item_parts[0]
-		per_num = item_parts[1]
+		period_num = item_parts[1]
 		pen_time = item_parts[2]
 		pen_length = item_parts[5]
 		pen_type = item_parts[6]
@@ -371,7 +374,7 @@ def chop_penalties_branch (tree, roster):
 		penalized_player = clone_rosterplayer(player_num, player_name, roster) 
 
 		temp = Penalty(
-			pen_num, per_num, pen_time, pen_length, pen_type, penalized_player
+			pen_num, period_num, pen_time, pen_length, pen_type, penalized_player
 			)
 
 		penalties.append (temp)
@@ -387,14 +390,14 @@ def chop_byperiod_branch (tree):
 	periods = []
 
 	for x in range (1,len(tree)-1):
-		per_num = tree[x].xpath('./td/text()')[0]
+		period_num = tree[x].xpath('./td/text()')[0]
 		num_goals = tree[x].xpath('./td/text()')[1]
 		num_shots = tree[x].xpath('./td/text()')[2]
 		num_penalties = tree[x].xpath('./td/text()')[3]
 		PIM = tree[x].xpath('./td/text()')[4]
 
 		periods.append (Period(
-			per_num, num_goals, num_shots, num_penalties, PIM
+			period_num, num_goals, num_shots, num_penalties, PIM
 			)
 		)
 
@@ -574,12 +577,24 @@ def harvest (year, game_num, game_info, game_personnel):
 	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
 	
 	# Skipping first item in iterable roster
-	goals = chop_goals_branch (tables[2].xpath('.//tr'), game_info.away_team, game_info.home_team, game_personnel.away_roster, game_personnel.home_roster)
+	goals = chop_goals_branch (
+		tables[2].xpath('.//tr'), \
+		game_info.away_team, \
+		game_info.home_team, \
+		game_personnel.away_roster, \
+		game_personnel.home_roster
+		)
 		
 	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
 	
-	away_penalties = chop_penalties_branch (penalties_raw[0], game_personnel.away_roster)
-	home_penalties = chop_penalties_branch (penalties_raw[1], game_personnel.home_roster)
+	away_penalties = chop_penalties_branch (
+		penalties_raw[0], \
+		game_personnel.away_roster
+		)
+	home_penalties = chop_penalties_branch (
+		penalties_raw[1], \
+		game_personnel.home_roster
+		)
 
 	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
 	
@@ -610,8 +625,7 @@ def harvest (year, game_num, game_info, game_personnel):
 if __name__ == '__main__':
 
 	import GameHeader
-	import Roster
-
+	
 	year = '20152016'
 	game_num = '0001'
 	report_type = 'PL'

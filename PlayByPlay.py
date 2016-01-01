@@ -5,11 +5,11 @@ import Roster
 
 class Event(object):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__ (self, num, period_num, strength, time, event_type, zone, \
 			description, away_on_ice, home_on_ice):
 
 		self.num = num
-		self.per_num = per_num
+		self.period_num = period_num
 		self.strength = strength
 		self.time = time
 		self.event_type = event_type
@@ -21,18 +21,18 @@ class Event(object):
 	def create_prefix(self):
 
 		event_num = ("\nE" + self.num.encode('utf-8')).ljust(5)
-		per_num = (" P" + self.per_num.encode('utf-8')).ljust(3)
+		period_num = (" P" + self.period_num.encode('utf-8')).ljust(3)
 		strength = (" " + self.strength.encode('utf-8')).ljust(4)
 		time = ("@" + self.time.encode('utf-8')).ljust(7)
 		event_type = (self.event_type.encode('utf-8')).ljust(6)
 		zone = (str(self.zone).encode('utf-8')).ljust(5)
 
-		return event_num + per_num + strength + time + event_type + zone
+		return event_num + period_num + strength + time + event_type + zone
 
 	def __str__ (self):
 
 		event_num = ("\nE#" + self.num.encode('utf-8')).ljust(6)
-		per_num = (" P#" + self.per_num.encode('utf-8')).ljust(4)
+		period_num = (" P#" + self.period_num.encode('utf-8')).ljust(4)
 		strength = (" " + self.strength.encode('utf-8')).ljust(4)
 		time = ("@" + self.time.encode('utf-8')).ljust(7)
 		event_type = (self.event_type.encode('utf-8')).ljust(5)
@@ -432,7 +432,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return PeriodStart(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time,\
 			event.event_type, \
@@ -452,7 +452,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return PeriodEnd(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time,\
 			event.event_type, \
@@ -472,7 +472,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return GameEnd(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time,\
 			event.event_type, \
@@ -518,7 +518,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return FaceOff(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -557,7 +557,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		if event.event_type == 'GIVE':
 			return Give(
 				event.num, \
-				event.per_num, \
+				event.period_num, \
 				event.strength, \
 				event.time, \
 				event.event_type, \
@@ -572,7 +572,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		elif event.event_type == 'TAKE':
 			return Take(
 				event.num, \
-				event.per_num, \
+				event.period_num, \
 				event.strength, \
 				event.time, \
 				event.event_type, \
@@ -617,7 +617,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		
 		return Shot(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -680,7 +680,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return Block(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -734,7 +734,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		
 		return Miss(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -785,7 +785,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return Hit(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -859,7 +859,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return Stop(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -950,7 +950,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return Goal(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -1029,7 +1029,7 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		return Penalty(
 			event.num, \
-			event.per_num, \
+			event.period_num, \
 			event.strength, \
 			event.time, \
 			event.event_type, \
@@ -1078,15 +1078,14 @@ def harvest (year, game_num, report_type, game_type, game_info, game_personnel):
 			playbyplay.penalties.append(pruned_event)
 		elif pruned_event.event_type == 'PSTR':
 			playbyplay.period_starts.append(pruned_event)
+		elif pruned_event.event_type == 'SHOT':
+			playbyplay.shots.append(pruned_event)		
 		elif pruned_event.event_type == 'STOP':
 			playbyplay.stops.append(pruned_event)
 		elif pruned_event.event_type == 'TAKE':
 			playbyplay.take_aways.append(pruned_event)
 
 	return playbyplay
-
-
-
 
 if __name__ == '__main__':
 	
@@ -1095,5 +1094,9 @@ if __name__ == '__main__':
 	report_type = 'PL'
 	game_type = '02'
 
-	temp_pbp = harvest(year, game_num, report_type, game_type)
+	game_info = GameHeader.harvest(year, game_num, report_type, game_type)
+	game_personnel = Roster.harvest (year, game_num)
+	temp_pbp = harvest(year, game_num, report_type, game_type, game_info, game_personnel)
+
+	print temp_pbp
 
