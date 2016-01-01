@@ -367,20 +367,6 @@ def clone_rosterplayer (num, last_name, roster):
 			return player
 
 	assert True, "ERROR: no matching player"
-'''
-def clone_oniceplayer (num, last_name, oniceplayers):
-	
-	Given a num and last name, find the corresponding player object in 
-	oniceplayers and return it
-	
-
-	for player in oniceplayers:
-		if player.num == num and player.last_name == last_name:
-			return player
-
-	# Player indicated in event description is not on ice (possible)			
-	return Operations.OnIcePlayer (num, None, None, last_name)
-'''
 
 def raw_harvest (year, game_num, away_roster, home_roster):
 	"""
@@ -1059,14 +1045,12 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 			drawing_team
 			)
 
-def harvest (year, game_num, report_type, game_type):
+def harvest (year, game_num, report_type, game_type, game_info, game_personnel):
 	'''
 	Extract information from playbyplay html file and returns a 
 	PlayByPlay object with which we run tests/create sql tables
 	'''
 
-	gameinfo_temp = GameHeader.harvest(year, game_num, report_type, game_type)
-	game_personnel = Roster.harvest (year, game_num)
 	raw_events = raw_harvest (year, game_num, game_personnel.away_roster, game_personnel.home_roster)
 
 	playbyplay = PlayByPlay(raw_events)
@@ -1074,9 +1058,9 @@ def harvest (year, game_num, report_type, game_type):
 	for index, event in enumerate(raw_events):
 
 		pruned_event = event_prune (
-			index, raw_events, game_personnel, gameinfo_temp.away_team, gameinfo_temp.home_team
+			index, raw_events, game_personnel, game_info.away_team, game_info.home_team
 			)
-		print pruned_event
+		#print pruned_event
 				
 		if pruned_event.event_type == 'BLOCK':
 			playbyplay.blocks.append(pruned_event)

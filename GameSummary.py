@@ -2,14 +2,6 @@ from lxml import html, etree
 import Operations
 import Objects
 
-class Player(object):
-	def __init__ (self, num, first_initial, last_name):
-
-		self.num = num
-		self.first_initial = first_initial
-		self.last_name = last_name
-
-
 class Goal (object):
 
 	def __init__(self, goal_num, per_num, time, strength, scoring_team, \
@@ -247,7 +239,20 @@ class GameSummary (object):
 			away_periods + home_periods + away_powerplay + home_powerplay + \
 			away_goalies + home_goalies + officials + game_stars
 
-def chop_goals_branch (tree):
+def clone_rosterplayer (num, last_name, roster):
+	'''
+	Given basic player information, match that to a Roster.Player object in 
+	roster and return that object
+	'''
+	for player in roster:
+				
+		if player.num == num and player.last_name == last_name:
+
+			return player
+
+	assert False, "ERROR: no matching player for %s %s" % (num, last_name)
+
+def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 	'''
 	Given the goal xml tree, return a list of Goal objects
 	'''
@@ -267,55 +272,73 @@ def chop_goals_branch (tree):
 		time = temp_goal[2]
 		strength = temp_goal[3]
 		scoring_team = temp_goal[4]
+		if scoring_team == away_team:
+			scoring_roster = away_roster
+		elif scoring_team == home_team:
+			scoring_roster = home_roster
+		else:
+			assert True, "ERROR: scoring team has no match"
 
 		scoring_player_raw = temp_goal [5].split()
 		scoring_num = scoring_player_raw[0]
 		
-		name_raw = scoring_player_raw[1]
+		name_raw = " ".join(scoring_player_raw[1:])
 		anchor1 = name_raw.find(".")
 		anchor2 = name_raw.find("(")
 
 		scoring_initial = name_raw[:anchor1]
-		scoring_name = name_raw[anchor1 + 1: anchor2]
-		
-		scoring_player = Player(scoring_num, scoring_initial, scoring_name)
+		scoring_last_name = name_raw[anchor1 + 1: anchor2]
+
+		scoring_player = clone_rosterplayer(
+			scoring_num, \
+			scoring_last_name, \
+			scoring_roster			
+			)
 		
 		try:
 			prim_assist_player_raw = temp_goal [6].split()
 			prim_assist_num = prim_assist_player_raw[0]
 
-			name_raw = prim_assist_player_raw[1]
+			name_raw = " ".join(prim_assist_player_raw[1:])
 			anchor1 = name_raw.find(".")
 			anchor2 = name_raw.find("(")
 
 			prim_assist_initial = name_raw[:anchor1]
-			prim_assist_name = name_raw[anchor1 + 1: anchor2]
+			prim_assist_last_name = name_raw[anchor1 + 1: anchor2]
 
-			prim_assist_player = Player (prim_assist_num, prim_assist_initial, \
-				prim_assist_name)
+			print prim_assist_num, prim_assist_last_name
 
-		except:
-			prim_assist_player = Player (None, None, None)
+			prim_assist_player = clone_rosterplayer (
+				prim_assist_num, \
+				prim_assist_last_name, \
+				scoring_roster
+				)
+
+		except IndexError:
+			prim_assist_player = Roster.return_null_player()
 		
 		try:
 			sec_assist_player_raw = temp_goal [7].split()
 			sec_assist_num = sec_assist_player_raw[0]
 			
-			name_raw = sec_assist_player_raw[1]
+			name_raw = " ".join(sec_assist_player_raw[1:])
 			anchor1 = name_raw.find(".")
 			anchor2 = name_raw.find("(")
 
 			sec_assist_initial = name_raw[:anchor1]
-			sec_assist_name = name_raw[anchor1 + 1: anchor2]
+			sec_assist_last_name = name_raw[anchor1 + 1: anchor2]
 
-			sec_assist_player = Player (sec_assist_num, sec_assist_initial, \
-				sec_assist_name)
+			sec_assist_player = clone_rosterplayer (
+				sec_assist_num, \
+				sec_assist_last_name, \
+				scoring_roster
+				)
 
-		except:
-			sec_assist_player = Player(None, None, None)
+		except IndexError:
+			sec_assist_player = Roster.return_null_player()
 		
-		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8])
-		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9])
+		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8], away_roster)
+		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9], home_roster)
 
 		goals.append(Goal(goal_num, per_num, time, strength, scoring_team, \
 			scoring_player, prim_assist_player, sec_assist_player, \
@@ -323,7 +346,7 @@ def chop_goals_branch (tree):
 
 	return goals
 		
-def chop_penalties_branch (tree):
+def chop_penalties_branch (tree, roster):
 	'''
 	Given an indivudal team's penalties xml tree, return a list of
 	GameSummary Penalty objects
@@ -345,7 +368,7 @@ def chop_penalties_branch (tree):
 		player_num = player_raw[0]
 		player_initial = player_raw[3][0]
 		player_name = player_raw[3][2:] # First inital infront of name
-		penalized_player = Player(player_num, player_initial, player_name) 
+		penalized_player = clone_rosterplayer(player_num, player_name, roster) 
 
 		temp = Penalty(
 			pen_num, per_num, pen_time, pen_length, pen_type, penalized_player
@@ -540,7 +563,7 @@ def chop_stars_branch(tree):
 	#print etree.tostring (stars_raw, pretty_print = True)
  	return picker, stars
 
-def harvest (year, game_num):
+def harvest (year, game_num, game_info, game_personnel):
 	'''
 	Extract information from game summery html file and returns a 
 	GameSummary object with which we run tests!
@@ -551,12 +574,12 @@ def harvest (year, game_num):
 	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
 	
 	# Skipping first item in iterable roster
-	goals = chop_goals_branch (tables[2].xpath('.//tr'))
+	goals = chop_goals_branch (tables[2].xpath('.//tr'), game_info.away_team, game_info.home_team, game_personnel.away_roster, game_personnel.home_roster)
 		
 	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
 	
-	home_penalties = chop_penalties_branch (penalties_raw[0])
-	away_penalties = chop_penalties_branch (penalties_raw[1])
+	away_penalties = chop_penalties_branch (penalties_raw[0], game_personnel.away_roster)
+	home_penalties = chop_penalties_branch (penalties_raw[1], game_personnel.home_roster)
 
 	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
 	
@@ -585,4 +608,15 @@ def harvest (year, game_num):
 	#print etree.tostring (item, pretty_print = True)
 
 if __name__ == '__main__':
-	print harvest ("20152016", "0003")
+
+	import GameHeader
+	import Roster
+
+	year = '20152016'
+	game_num = '0001'
+	report_type = 'PL'
+	game_type = '02'
+
+	game_info = GameHeader.harvest(year, game_num, report_type, game_type)
+	game_personnel = Roster.harvest (year, game_num)
+	print harvest (year, game_num, game_info, game_personnel)

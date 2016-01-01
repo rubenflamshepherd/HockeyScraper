@@ -1,7 +1,15 @@
+import GameHeader
+import GameSummary
+import PlayByPlay
 import Roster
 
 if __name__ == '__main__':
-	print Roster.harvester('20152016', '0003')
 
-	#print temp.away_coach
-	#print temp.home_coach
+	year = '20152016'
+	game_num = '0001'
+	report_type = 'PL'
+	game_type = '02'
+
+	game_info = GameHeader.harvest(year, game_num, report_type, game_type)
+	game_personnel = Roster.harvest (year, game_num)
+	pbp = PlayByPlay.harvest(year, game_num, report_type, game_type, game_info, game_personnel)
