@@ -69,7 +69,7 @@ class Period(object):
 		self.num_penalties = num_penalties
 		self.PIM = PIM
 
-	def __str__ (self):
+	def __str__(self):
 
 		period_num = ("Per#: " + self.period_num.encode('utf-8')).ljust(8)
 		num_goals = ("#G: " + self.num_goals.encode('utf-8')).ljust(8)
@@ -126,7 +126,7 @@ class Goalie (object):
 		data = num_data + last_name_data + first_name_data + status_data
 
 		for item in self.fields_list:
-			data += item.field_content.ljust(6)
+			data += str(item.field_content).ljust(6)
 
 		for item in self.fields_list:
 			header += item.field_title.ljust(6)
@@ -140,11 +140,10 @@ class GoalieField (object):
 		self.field_content = field_content
 
 	def __str__ (self):
-		return self.field_title + " | " + \
-		self.field_content.encode('utf-8')
+		return self.field_title + " | " + str(self.field_content).encode('utf-8')
 
 class GameSummary (object):
-	
+
 	def __init__(self, goals, away_penalties, home_penalties, \
 		away_periods, home_periods, away_powerplay, home_powerplay, \
 		away_evenstrength, home_evenstrength, away_goalies, home_goalies, \
@@ -460,21 +459,17 @@ def chop_goalie_branch(tree):
 		elif 'class' in item.attrib:
 
 			if item.attrib['class'] == 'evenColor' or \
-				item.attrib['class'] == 'oddColor':
-				
+					item.attrib['class'] == 'oddColor':				
 				goalie_raw = item.xpath ('./td/text()')
 				# Instatiate list containing GoalieField objects
 				fields = []
 
 				for index, cell in enumerate(goalie_raw):
-
 					if index == 0:
 						goalie_num = cell
-
 					elif index == 1:
 						goalie_pos = cell
 						assert goalie_pos == 'G', "ERROR: goalie pos not 'G'"
-
 					elif index == 2:
 						name_raw = cell.split()
 
@@ -495,13 +490,28 @@ def chop_goalie_branch(tree):
 						field_title = active_headers[index-3]
 						if cell == u'\xa0':
 							cell = None
-						field_content = str(cell)
+						field_content = cell
 						fields.append (GoalieField(field_title, field_content))
 						
-				active_goalies.append (Goalie (
-					goalie_num, first_name, last_name, status, fields
+				active_goalies.append (
+					Goalie (goalie_num, first_name, last_name, status, fields)
 					)
-				)
+				
+			elif item.attrib['class'] == 'italic': # col for empty net
+				goalie_raw = item.xpath ('./td/text()')
+				# Instatiate list containing GoalieField objects
+				fields = []
+				for index, cell in enumerate(goalie_raw):
+					if index >= 2:
+						field_title = active_headers[index-2]
+						if cell == u'\xa0':
+							cell = None
+						field_content = cell
+						fields.append (GoalieField(field_title, field_content))
+				
+				active_goalies.append (
+					Goalie ('00', 'EMPTY', 'NET', 'NA', fields)
+					)
 
 	home_goalies = active_goalies
 
@@ -633,4 +643,7 @@ if __name__ == '__main__':
 
 	game_info = GameHeader.harvest(year, game_num, report_type, game_type)
 	game_personnel = Roster.harvest (year, game_num)
-	print harvest (year, game_num, game_info, game_personnel)
+	game_summary  = harvest (year, game_num, game_info, game_personnel)
+
+	for goalie in game_summary.home_goalies:
+		print goalie

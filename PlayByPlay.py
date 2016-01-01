@@ -5,8 +5,8 @@ import Roster
 
 class Event(object):
 
-	def __init__ (self, num, period_num, strength, time, event_type, zone, \
-			description, away_on_ice, home_on_ice):
+	def __init__(self, num, period_num, strength, time, event_type, zone,
+				 description, away_on_ice, home_on_ice):
 
 		self.num = num
 		self.period_num = period_num
@@ -29,7 +29,7 @@ class Event(object):
 
 		return event_num + period_num + strength + time + event_type + zone
 
-	def __str__ (self):
+	def __str__(self):
 
 		event_num = ("\nE#" + self.num.encode('utf-8')).ljust(6)
 		period_num = (" P#" + self.period_num.encode('utf-8')).ljust(4)
@@ -42,12 +42,13 @@ class Event(object):
 
 class Block(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
-		description, away_on_ice, home_on_ice, shot_type, shooting_player, \
-		blocking_player, shooting_team, blocking_team):
+	def __init__(self, num, per_num, strength, time, event_type, zone, 
+				 description, away_on_ice, home_on_ice, shot_type,
+				 shooting_player, blocking_player, shooting_team, 
+				 blocking_team):
 
-		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
-			description, away_on_ice, home_on_ice)
+		Event.__init__(self, num, per_num, strength, time, event_type, zone, 
+					   description, away_on_ice, home_on_ice)
 	
 		self.shot_type = shot_type
 		self.shooting_player = shooting_player
@@ -55,19 +56,19 @@ class Block(Event):
 		self.shooting_team = shooting_team
 		self.blocking_team = blocking_team
 	
-	def __str__ (self):
+	def __str__(self):
 
 		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
 		shooting_player = ('SP ' + self.shooting_player.show).ljust(20)		
 		blocking_player = ('BP ' + self.blocking_player.show).ljust(20)
 
-		return self.create_prefix() + shot_type \
-			+ shooting_player + blocking_player
+		return self.create_prefix() + shot_type + shooting_player \
+			   + blocking_player
 
 class FaceOff(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
-		description, away_on_ice, home_on_ice, winning_player, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
+		description, away_on_ice, home_on_ice, winning_player, 
 		losing_player, winning_team, losing_team):
 		
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
@@ -78,7 +79,7 @@ class FaceOff(Event):
 		self.winning_team = winning_team
 		self.losing_team = losing_team
 	
-	def __str__ (self):
+	def __str__(self):
 
 		winning_player = ('WP ' + self.winning_player.show).ljust(20)		
 		losing_player = ('LP ' + self.losing_player.show).ljust(20)
@@ -87,7 +88,7 @@ class FaceOff(Event):
 
 class Give(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, 
 		description, away_on_ice, home_on_ice, giving_player, giving_team):
 		
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
@@ -105,9 +106,9 @@ class Give(Event):
 
 class Goal(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
-		description, away_on_ice, home_on_ice, shot_type, distance, \
-		scoring_player, scoring_team, prim_assist_player, sec_assist_player,\
+	def __init__(self, num, per_num, strength, time, event_type, zone, 
+		description, away_on_ice, home_on_ice, shot_type, distance, 
+		scoring_player, scoring_team, prim_assist_player, sec_assist_player,
 		goalie, defending_team):
 		
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
@@ -138,8 +139,8 @@ class Goal(Event):
 
 class Hit(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
-		description, away_on_ice, home_on_ice, hitting_player, hit_player, \
+	def __init__(self, num, per_num, strength, time, event_type, zone,
+		description, away_on_ice, home_on_ice, hitting_player, hit_player,
 		hitting_team, hit_team):
 		
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
@@ -159,7 +160,7 @@ class Hit(Event):
 
 class Miss(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
 		description, away_on_ice, home_on_ice, shot_type, miss_type, distance, \
 		shooting_player, blocking_player, shooting_team, blocking_team):
 		
@@ -174,7 +175,7 @@ class Miss(Event):
 		self.shooting_team = shooting_team
 		self.blocking_team = blocking_team
 
-	def __str__ (self):
+	def __str__(self):
 
 		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
 		miss_type = (self.miss_type.encode('utf-8')).ljust(7)		
@@ -187,7 +188,7 @@ class Miss(Event):
 
 class Penalty(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
 	 	description, away_on_ice, home_on_ice, penalty_type, length, \
 	 	penalized_player, drawing_player, penalized_team, drawing_team):
 		
@@ -201,7 +202,7 @@ class Penalty(Event):
 		self.penalized_team = penalized_team
 		self.drawing_team = drawing_team
 
-	def __str__ (self):
+	def __str__(self):
 
 		penalty_type = (self.penalty_type.encode('utf-8')).ljust(10)		
 		length = (self.length.encode('utf-8')).ljust(4)
@@ -233,7 +234,7 @@ class PeriodStart(Event):
 
 class PeriodEnd(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
 		description, away_on_ice, home_on_ice, start_time, time_zone):
 		
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, \
@@ -243,7 +244,7 @@ class PeriodEnd(Event):
 		self.time_zone = time_zone
 	
 
-	def __str__ (self):
+	def __str__(self):
 
 		description = (self.end_time.__str__() + ' ' + self.time_zone).ljust(35) 
 
@@ -261,7 +262,7 @@ class GameEnd(Event):
 		self.time_zone = time_zone
 	
 
-	def __str__ (self):
+	def __str__(self):
 
 		description = (self.end_time.__str__() + ' ' + self.time_zone).ljust(35) 
 
@@ -269,7 +270,7 @@ class GameEnd(Event):
 	
 class Shot(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
 		description, away_on_ice, home_on_ice, shot_type, distance, \
 		shooting_player, blocking_player, shooting_team, blocking_team):
 		
@@ -283,7 +284,7 @@ class Shot(Event):
 		self.shooting_team = shooting_team
 		self.blocking_team = blocking_team
 	
-	def __str__ (self):
+	def __str__(self):
 
 		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
 		distance = (self.distance.encode('utf-8')).ljust(4)
@@ -295,7 +296,7 @@ class Shot(Event):
 
 class Stop(Event):
 
-	def __init__ (self, num, per_num, strength, time, event_type, zone, \
+	def __init__(self, num, per_num, strength, time, event_type, zone, \
 		description, away_on_ice, home_on_ice, description_parsed, \
 		stopping_player, stopping_team, tv_timeout, timeout_caller):
 
@@ -308,7 +309,7 @@ class Stop(Event):
 		self.tv_timeout = tv_timeout
 		self.timeout_caller = timeout_caller
 	
-	def __str__ (self):
+	def __str__(self):
 
 		description_parsed = self.description_parsed.ljust(20)
 		stopping_player = ('By ' + str(self.stopping_team) + ' '\
@@ -330,7 +331,7 @@ class Take(Event):
 		self.taking_player = taking_player
 		self.taking_team = taking_team
 	
-	def __str__ (self):
+	def __str__(self):
 		
 		taking_player = ('By ' + self.taking_team + ' ' + \
 			self.taking_player.show).ljust(25)		
@@ -431,15 +432,15 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		zone = 'Neu.'
 
 		return PeriodStart(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time,\
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
 			start_time,
 			time_zone
 			)
@@ -451,15 +452,15 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		zone = 'Neu.'
 
 		return PeriodEnd(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time,\
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
 			end_time,
 			time_zone
 			)
@@ -471,15 +472,15 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		zone = 'Neu.'
 
 		return GameEnd(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time,\
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
 			end_time,
 			time_zone
 			)
@@ -517,18 +518,18 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 				)
 
 		return FaceOff(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			winning_player, \
-			losing_player, \
-			winning_team, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			winning_player,
+			losing_player,
+			winning_team,
 			losing_team
 			)
 
@@ -556,31 +557,31 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		if event.event_type == 'GIVE':
 			return Give(
-				event.num, \
-				event.period_num, \
-				event.strength, \
-				event.time, \
-				event.event_type, \
-				zone, \
-				event.description, \
-				event.away_on_ice, \
-				event.home_on_ice, \
-				givetake_player, \
+				event.num,
+				event.period_num,
+				event.strength,
+				event.time,
+				event.event_type,
+				zone,
+				event.description,
+				event.away_on_ice,
+				event.home_on_ice,
+				givetake_player,
 				givetake_team
 				)
 
 		elif event.event_type == 'TAKE':
 			return Take(
-				event.num, \
-				event.period_num, \
-				event.strength, \
-				event.time, \
-				event.event_type, \
-				zone, \
-				event.description, \
-				event.away_on_ice, \
-				event.home_on_ice, \
-				givetake_player, \
+				event.num,
+				event.period_num,
+				event.strength,
+				event.time,
+				event.event_type,
+				zone,
+				event.description,
+				event.away_on_ice,
+				event.home_on_ice,
+				givetake_player,
 				givetake_team
 				)
 
@@ -616,20 +617,20 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 			)
 		
 		return Shot(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			shot_type, \
-			distance, \
-			shooting_player, \
-			blocking_player, \
-			shooting_team, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			shot_type,
+			distance,
+			shooting_player,
+			blocking_player,
+			shooting_team,
 			blocking_team
 			)
 
@@ -679,19 +680,19 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 
 		return Block(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			shot_type, \
-			shooting_player, \
-			blocking_player, \
-			shooting_team, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			shot_type,
+			shooting_player,
+			blocking_player,
+			shooting_team,
 			blocking_team
 			)
 
@@ -733,21 +734,21 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 			)
 		
 		return Miss(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			shot_type, \
-			miss_type, \
-			distance, \
-			shooting_player, \
-			blocking_player, \
-			shooting_team, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			shot_type,
+			miss_type,
+			distance,
+			shooting_player,
+			blocking_player,
+			shooting_team,
 			blocking_team
 			)
 
@@ -784,18 +785,18 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 		hit_player = clone_rosterplayer(hit_num, hit_name, hit_on_ice)
 
 		return Hit(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			hitting_player, \
-			hit_player, \
-			hitting_team, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			hitting_player,
+			hit_player,
+			hitting_team,
 			hit_team
 			)
 
@@ -858,19 +859,19 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 				)
 
 		return Stop(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			description_parsed, \
-			stopping_player, \
-			stopping_team, \
-			tv_timeout, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			description_parsed,
+			stopping_player,
+			stopping_team,
+			tv_timeout,
 			timeout_caller
 			)
 
@@ -949,22 +950,22 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 				goalie = player
 
 		return Goal(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			shot_type, \
-			distance, \
-			scoring_player, \
-			scoring_team, \
-			prim_assist_player, \
-			sec_assist_player, \
-			goalie, \
+			event.num,
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			shot_type,
+			distance,
+			scoring_player,
+			scoring_team,
+			prim_assist_player,
+			sec_assist_player,
+			goalie,
 			defending_team
 			)
 
@@ -996,7 +997,6 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 
 		penalized_num = name_raw[1].strip('#')
 		penalized_name = " ".join(name_raw[2:anchor1])
-
 		penalized_player = clone_rosterplayer(
 			penalized_num, penalized_name, penalized_roster
 			)
@@ -1010,10 +1010,9 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 				break
 		
 		anchor3 = description_raw.index('min') - 1
+		anchor4 = description_raw.index('Zone') - 1
 		length = description_raw [anchor3]
 		penalty_type = " ".join(description_raw[anchor2:anchor3])
-
-		anchor4 = description_raw.index('Zone') - 1
 		zone = description_raw [anchor4]
 
 		try:
@@ -1028,20 +1027,20 @@ def event_prune(event_index, event_list, game_personnel, away_team, home_team):
 			drawing_player = Roster.return_null_player()
 
 		return Penalty(
-			event.num, \
-			event.period_num, \
-			event.strength, \
-			event.time, \
-			event.event_type, \
-			zone, \
-			event.description, \
-			event.away_on_ice, \
-			event.home_on_ice, \
-			penalty_type, \
-			length, \
-			penalized_player, \
-			drawing_player, \
-			penalized_team, \
+			event.num, 
+			event.period_num,
+			event.strength,
+			event.time,
+			event.event_type,
+			zone,
+			event.description,
+			event.away_on_ice,
+			event.home_on_ice,
+			penalty_type,
+			length,
+			penalized_player,
+			drawing_player,
+			penalized_team,
 			drawing_team
 			)
 
@@ -1051,16 +1050,18 @@ def harvest (year, game_num, report_type, game_type, game_info, game_personnel):
 	PlayByPlay object with which we run tests/create sql tables
 	'''
 
-	raw_events = raw_harvest (year, game_num, game_personnel.away_roster, game_personnel.home_roster)
+	raw_events = raw_harvest (year, game_num, game_personnel.away_roster,
+							  game_personnel.home_roster)
 
 	playbyplay = PlayByPlay(raw_events)
 
 	for index, event in enumerate(raw_events):
 
-		pruned_event = event_prune (
-			index, raw_events, game_personnel, game_info.away_team, game_info.home_team
+		pruned_event = event_prune(
+			index, raw_events, game_personnel,
+			game_info.away_team, game_info.home_team
 			)
-		#print pruned_event
+		# print pruned_event
 				
 		if pruned_event.event_type == 'BLOCK':
 			playbyplay.blocks.append(pruned_event)
@@ -1097,6 +1098,3 @@ if __name__ == '__main__':
 	game_info = GameHeader.harvest(year, game_num, report_type, game_type)
 	game_personnel = Roster.harvest (year, game_num)
 	temp_pbp = harvest(year, game_num, report_type, game_type, game_info, game_personnel)
-
-	print temp_pbp
-

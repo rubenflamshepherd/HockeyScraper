@@ -9,7 +9,7 @@ class GameSummaryVsRoster(unittest.TestCase):
 	def setUp(self):
 
 		year = '20152016'
-		game_num = '0001'
+		game_num = '0002'
 		report_type = 'PL'
 		game_type = '02'
 
@@ -41,7 +41,7 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 	def setUp(self):
 
 		year = '20152016'
-		game_num = '0001'
+		game_num = '0002'
 		report_type = 'PL'
 		game_type = '02'
 
@@ -52,7 +52,7 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 		self.playbyplay = PlayByPlay.harvest(year, game_num, report_type, game_type, self.game_info, self.game_personnel)
 
 	def tearDown(self):
-		
+
 		print 'In tearDown()'
 		del self.game_summary
 		del self.playbyplay
@@ -162,14 +162,35 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 
 		# Running tests
 		for period in self.game_summary.away_periods:
+			# vars for tracking totals in Goalie.Field objects
+			gs_goalie_num_goals = 0
+			gs_goalie_num_shots = 0
+			# away goals are scored on home_goalie
+			for goalie in self.game_summary.home_goalies:
+				for field in goalie.fields_list:
+					if field.field_title == period.period_num and \
+							field.field_content != None:
+						field_goals = field.field_content.split('-')[0]
+						field_shots = field.field_content.split('-')[1]
+						gs_goalie_num_goals += int (field_goals)
+						gs_goalie_num_shots += int (field_shots)
+			
 			if period.period_num in away_goals_dict:
 				self.assertEqual(
 					period.num_goals, \
 					str(len(away_goals_dict[period.period_num]))
 					)
+				self.assertEqual(
+					gs_goalie_num_goals,
+					len(away_goals_dict[period.period_num])
+					)
 			if period.period_num in away_shots_dict:
 				self.assertEqual(
 					int(period.num_shots) - int(period.num_goals), \
+					len(away_shots_dict[period.period_num])
+					)
+				self.assertEqual(
+					gs_goalie_num_shots - gs_goalie_num_goals,
 					len(away_shots_dict[period.period_num])
 					)
 			if period.period_num in away_penalties_dict:
@@ -193,6 +214,21 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 					period.num_goals, \
 					str(len(home_goals_dict[period.period_num]))
 					)
+
+				gs_goalie_num_goals = 0
+				# home goals are scored on away_goalie
+				for goalie in self.game_summary.away_goalies:
+					for field in goalie.fields_list:
+						if field.field_title == period.period_num and \
+								field.field_content != None:
+							field_goals = field.field_content.split('-')[0]
+							field_shots = field.field_content.split('-')[1]
+							gs_goalie_num_goals += int (field_goals)
+				self.assertEqual(
+					gs_goalie_num_goals,
+					len(home_goals_dict[period.period_num])
+					)
+
 			if period.period_num in home_shots_dict:
 				self.assertEqual(
 					int(period.num_shots) - int(period.num_goals), \

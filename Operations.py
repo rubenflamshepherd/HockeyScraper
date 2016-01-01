@@ -187,6 +187,9 @@ def get_playerid(first_name, last_name):
 		(first_name, last_name,))
 	temp_return = c.fetchall()
 
+	if len (temp_return) != 1:
+		print str(temp_return) + '\n'
+
 	assert len(temp_return) == 1, "ERROR: more than one player with that first/last name combo"
 	
 	conn.commit ()

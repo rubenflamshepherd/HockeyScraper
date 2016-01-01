@@ -259,4 +259,4 @@ def harvest (year, game_num):
 		)
 
 if __name__ == '__main__':
-	print harvest('20152016', '0003')
+	print harvest('20152016', '0002')
