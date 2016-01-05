@@ -8,14 +8,14 @@ from random import randint
 import requests
 import time
 
-def grabber (season, start_game, finish_game, game_type):
+def harvest (season, start_game, finish_game, game_type):
 	'''
 	Grabs all resports for games with game numbers between start_game
 	and finish_game of game_type in season from nhl.com and stores them in a
 	local file
 	'''
 
-	destination_path =  "C:/Users/Daniel/Projects/HockeyScraper/Reports/"
+	destination_path =  "C:/Users/Ruben/Projects/HockeyScraper/Reports/"
 	report_types = ["GS", "ES", "FC", "FS", "PL", "TV", "TH", "RO", "SS"]
 	not_found_urls = []
 	start_time = time.time()
@@ -76,4 +76,4 @@ def grabber (season, start_game, finish_game, game_type):
 		print item
 
 if __name__ == '__main__':
-	grabber ('20152016', 1, 20, '02')
+	harvest ('20152016', 1, 20, '02')

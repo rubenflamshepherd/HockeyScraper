@@ -19,6 +19,7 @@ team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
              ['kings', 'LOS ANGELES', 'KINGS', 'L.A'],
              ['wild', 'MINNESOTA', 'WILD', 'MIN'],
              ['canadiens', 'MONTREAL', 'CANADIENS', 'MTL'],
+             ['canadiens', u'MONTR\xc9AL', 'CANADIENS', 'MTL'], #unicode accent
              ['predators', 'NASHVILLE', 'PREDATORS', 'NSH'],
              ['devils', 'NEW JERSEY', 'DEVILS', 'N.J'],
              ['islanders', 'NEW YORK', 'ISLANDERS', 'NYI'],
@@ -142,6 +143,8 @@ def team_name_to_acronym (team_name):
 	given a team name, return the three letter acronym for that team 
 	'''
 
+	team_name = team_name.upper()
+
 	for item in team_list:
 
 		if team_name == " ".join(item[1:-1]):
@@ -149,6 +152,9 @@ def team_name_to_acronym (team_name):
 			team_acronym = item[-1]
 
 			return team_acronym
+	print [team_name]
+	assert False, "ERROR: cannot convert %s to acronym"%(team_name)
+
 
 def index_containing_substring(the_list, substring):
     for i, s in enumerate(the_list):

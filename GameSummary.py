@@ -364,7 +364,7 @@ def chop_penalties_branch (tree, roster):
 		period_num = item_parts[1]
 		pen_time = item_parts[2]
 		pen_length = item_parts[5]
-		pen_type = item_parts[6]
+		pen_type = item_parts[6].replace('(','').replace(')','')
 		
 		player_raw = item.xpath('./td/table/tr/td/text()')
 		player_num = player_raw[0]
@@ -496,7 +496,7 @@ def chop_goalie_branch(tree):
 				active_goalies.append (
 					Goalie (goalie_num, first_name, last_name, status, fields)
 					)
-				
+
 			elif item.attrib['class'] == 'italic': # col for empty net
 				goalie_raw = item.xpath ('./td/text()')
 				# Instatiate list containing GoalieField objects

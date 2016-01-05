@@ -46,10 +46,9 @@ class Block(Event):
 				 description, away_on_ice, home_on_ice, shot_type,
 				 shooting_player, blocking_player, shooting_team, 
 				 blocking_team):
-
-		Event.__init__(self, num, per_num, strength, time, event_type, zone, 
-					   description, away_on_ice, home_on_ice)
 	
+		Event.__init__(self, num, per_num, strength, time, event_type, zone, 
+					   description, away_on_ice, home_on_ice)	
 		self.shot_type = shot_type
 		self.shooting_player = shooting_player
 		self.blocking_player = blocking_player

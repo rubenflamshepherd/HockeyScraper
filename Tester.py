@@ -8,7 +8,7 @@ class GameSummaryVsRoster(unittest.TestCase):
 
 	def setUp(self):
 
-		year = '20152016'
+		year = '20142015'
 		game_num = '0002'
 		report_type = 'PL'
 		game_type = '02'
@@ -40,7 +40,7 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 
 	def setUp(self):
 
-		year = '20152016'
+		year = '20142015'
 		game_num = '0002'
 		report_type = 'PL'
 		game_type = '02'
