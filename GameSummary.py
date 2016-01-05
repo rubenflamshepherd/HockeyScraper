@@ -537,14 +537,14 @@ def chop_officials_branch(tree):
 		num =  referee_raw[0].strip('#')
 		first_name = referee_raw[1]
 		last_name = " ".join(referee_raw[2:])
-		referees.append(Objects.Referee(num, first_name, last_name))
+		referees.append(Roster.Referee(num, first_name, last_name))
 
 	for item in linesmen_raw:
 		linesman_raw = item.split()
 		num =  linesman_raw[0].strip('#')
 		first_name = linesman_raw[1]
 		last_name = " ".join(linesman_raw[2:])
-		linesmen.append(Objects.Linesman(num, first_name, last_name))
+		linesmen.append(Roster.Linesman(num, first_name, last_name))
 	
 	return linesmen, referees	
 

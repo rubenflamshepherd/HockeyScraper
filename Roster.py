@@ -48,7 +48,7 @@ class Player:
 	def __ne__(self, other):
 		return not self.__eq__(other)
 
-	def __str__ (self):
+	def __str__(self):
 
 		num = ("#" + self.num.encode('utf-8')).ljust(4)
 		pos = ("Pos " + self.pos.encode('utf-8')).ljust(6)
@@ -64,6 +64,26 @@ class Player:
 
 		return num + pos + name + captaincy + starting + \
 			scratch + playerid + '\n'
+
+class Official:
+	def __init__(self, num, first_name, last_name):
+		self.num = num
+		self.first_name = first_name
+		self.last_name = last_name
+
+class Referee(Official):
+
+	def __str__(self):
+
+		return "Referee: " + str(self.num) + ' ' + str(self.first_name) \
+			+ ' ' + str(self.last_name) + '\n'
+
+class Linesman(Official):
+
+	def __str__(self):
+
+		return "Linesman: " + str(self.num) + ' ' + str(self.first_name) \
+			+ ' ' + str(self.last_name) + '\n'
 
 class GamePersonnel(object):
 	def __init__ (self, away_roster, home_roster, away_coach, home_coach, \
@@ -151,10 +171,10 @@ def chop_officials_branch (tree):
 		last_name = " ".join(official[2:])
 
 		if index < 2:
-			temp_official = Objects.Referee (num, first_name, last_name)
+			temp_official = Referee (num, first_name, last_name)
 			referees.append (temp_official)
 		else:
-			temp_official = Objects.Linesman (num, first_name, last_name)
+			temp_official = Linesman (num, first_name, last_name)
 			linesmen.append (temp_official)
 		# print temp_official
 
