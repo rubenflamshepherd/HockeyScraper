@@ -1,6 +1,5 @@
 from lxml import html
 from Roster import Player
-import Objects
 import sqlite3
 
 #list for [url, city, team name, team acronym]

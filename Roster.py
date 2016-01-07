@@ -1,5 +1,4 @@
 import GameHeader
-import Objects
 import Operations
 
 class Coach:

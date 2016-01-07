@@ -1,6 +1,5 @@
 from lxml import html, etree
 import Operations
-import Objects
 import Roster
 
 class Goal (object):
