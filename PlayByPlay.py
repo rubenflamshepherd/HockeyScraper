@@ -46,7 +46,7 @@ class Block(Event):
 				 description, away_on_ice, home_on_ice, shot_type,
 				 shooting_player, blocking_player, shooting_team, 
 				 blocking_team):
-	
+
 		Event.__init__(self, num, per_num, strength, time, event_type, zone, 
 					   description, away_on_ice, home_on_ice)	
 		self.shot_type = shot_type
@@ -339,7 +339,7 @@ class Take(Event):
 
 class PlayByPlay (object):
 
-	def __init__(self, raw_events):
+	def __init__(self, raw_events)
 
 		self.raw_events = raw_events
 
@@ -357,7 +357,7 @@ class PlayByPlay (object):
 
 def clone_rosterplayer (num, last_name, roster):
 	'''
-	Given basic player information, match that to a Roster.Player object in 
+	Given basic player information, match that to a Roster.R_Player object in 
 	roster and return that object
 	'''
 	for player in roster:

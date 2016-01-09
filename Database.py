@@ -10,15 +10,15 @@ import sqlite3
 import time
 
 
-class Player(object):
+class DB_Player(object):
 
-	def __init__(self, playerid, first_name, last_name, position, 
+	def __init__(self, playerid, first_name, last_name, position_table, 
 		current_team, birth_date, birth_country, birth_state, birth_city):
 		
 		self.playerid = playerid
 		self.first_name = first_name
 		self.last_name = last_name
-		self.position = position
+		self.position_table = position_table
 		self.current_team = current_team
 		self.birth_date = birth_date
 		self.birth_country = birth_country
@@ -85,12 +85,12 @@ def germinate_all_players_table():
 		
 	c.execute(
 		'CREATE TABLE all_players (\
-		playerid INTEGER primary key, first_name_pres TEXT, \
-		last_name_pres TEXT, first_name TEXT, last_name TEXT, position TEXT, \
-		current_team TEXT, birth_date TEXT, birth_country TEXT, \
-		birth_state TEXT, birth_city TEXT, last_nhl_season TEXT, \
-		current_num INTEGER, weight TEXT, shoots TEXT, draft_year INTEGER, \
-		draft_team TEXT, draft_round INTEGER, draft_overall INTEGER, \
+		playerid INTEGER primary key, first_name TEXT, last_name TEXT,\
+		position_table TEXT, position_page TEXT, current_team TEXT, \
+		birth_date TEXT, birth_country TEXT, birth_state TEXT,\
+		birth_city TEXT, last_nhl_season TEXT, current_num INTEGER,\
+		weight TEXT, shoots TEXT, draft_year INTEGER, draft_team TEXT,\
+		draft_round INTEGER, draft_overall INTEGER, \
 		twitter TEXT, website TEXT\
 		)'
 	)
@@ -101,7 +101,7 @@ def germinate_all_players_table():
 def prune_all_players_table_page(tree):
 	'''
 	Given a xml tree of a page of players from all the table containing all nhl
-	players, put information from each row into a local Player object and return
+	players, put information from each row into a local DB_Player object and return
 	a list of the players
 	Used in func grow_all_players
 	'''
@@ -115,7 +115,7 @@ def prune_all_players_table_page(tree):
 		#Parsing first, last name and position
 		name_position_raw = tags[0].xpath('.//a/text()')[0]\
 			.rstrip()
-		position = name_position_raw.split()[-1].strip('()')
+		position_table = name_position_raw.split()[-1].strip('()')
 
 		# Differentiating the first name from the last name
 		name_raw = name_position_raw.split()[:-1]
@@ -162,9 +162,9 @@ def prune_all_players_table_page(tree):
 				birth_state = birthplace_raw[1].strip()
 			else:
 				birth_state = None
-		players.append(Player(playerid, first_name, last_name, position, 
-			current_team, birth_date, birth_country, birth_state, 
-			birth_city))
+		players.append(DB_Player(playerid, first_name, last_name, 
+			position_table, current_team, birth_date, birth_country, 
+			birth_state, birth_city))
 
 	return players
 
@@ -216,10 +216,9 @@ def grow_all_players():
 			try:
 				c.execute(
 					"INSERT INTO all_players VALUES \
-					(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", \
+					(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", \
 					(player.playerid, player.first_name, \
-					player.last_name, player.first_name.upper(), \
-					player.last_name.upper(), player.position, \
+					player.last_name, player.position_table, None, \
 					player.current_team, player.birth_date, \
 					player.birth_country, player.birth_state, \
 					player.birth_city, None, None, None, None, None, None, \
@@ -250,10 +249,12 @@ def ripen_tombstone(c, player):
 	Used in func ripen_player
 	'''
 	
-	c.execute("UPDATE all_players SET last_nhl_season = ?,current_num = ?, weight = ?,\
-		shoots = ?, draft_year = ?, draft_team = ?, draft_round = ?,\
-		draft_overall = ?, twitter = ?, website = ?\
-		WHERE playerid = ? ", (player.last_nhl_season, player.current_num, player.weight, player.shoots,
+	c.execute("UPDATE all_players SET position_page = ?, last_nhl_season = ?,\
+		current_num = ?, weight = ?, shoots = ?, draft_year = ?,\
+		draft_team = ?, draft_round = ?, draft_overall = ?, twitter = ?,\
+		website = ?\
+		WHERE playerid = ? ", (player.position_page, player.last_nhl_season,
+			player.current_num, player.weight, player.shoots,
 			player.draft_year, player.draft_team, player.draft_round, 
 			player.draft_overall, player.twitter, player.website, 
 			player.playerid)
@@ -296,9 +297,9 @@ def ripen_player(c, player):
 	'''
 
 	ripen_tombstone (c, player)
-	print 'RIPENED ' + str(player.playerid) + player.position
+	print 'RIPENED ' + str(player.playerid) + player.position_page
 
-	if player.position == 'Goalie': # PlayerPage.position, not db position!
+	if player.position_page == 'Goalie':
 		for season in player.regular_seasons:
 			ripen_season(c, 'goalie_seasons', season)
 		for season in player.playoff_seasons:
@@ -325,8 +326,10 @@ def ripen_all_players():
 	rows = c.fetchall()
 	for row in rows:
 		playerid = row[0]
-		position = row[5]
-		player = PlayerPage.harvest(playerid, position)
+		position_table = row[3]
+		assert position_table in ['G', 'D', 'LW', 'C', 'RW'],\
+			'ERROR: position_table invalid (=%s)'%(position_table)
+		player = PlayerPage.harvest(playerid, position_table)
 		ripen_player(c, player)
 
 	conn.commit ()
@@ -346,6 +349,6 @@ if __name__ == '__main__':
 
 	row = c.fetchone()
 	playerid = row[0]
-	position = row[5]
+	position = row[3]
 	player = PlayerPage.harvest(playerid, position)
 	ripen_player (c, player)	

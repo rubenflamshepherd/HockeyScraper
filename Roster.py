@@ -21,7 +21,7 @@ class Coach:
 
 		return team + first_name + last_name + '\n'
 
-class Player:
+class R_Player:
 
 	def __init__ (self, team, num, pos, first_name, last_name, captaincy, starting, \
 			scratch, playerid):
@@ -125,7 +125,7 @@ class GamePersonnel(object):
 			officials
 
 def return_null_player():
-	return Player (None, None, None, None, None, None, None, None, None)
+	return R_Player (None, None, None, None, None, None, None, None, None)
 
 def chop_coach_branch (tree):
 	'''
@@ -224,7 +224,7 @@ def chop_ind_roster_branch (tree, anchor, team):
 
 		playerid = Operations.get_playerid (first_name, last_name)
 
-		roster_objects.append(Player(team, num, pos, first_name, last_name, \
+		roster_objects.append(R_Player(team, num, pos, first_name, last_name, \
 			captaincy, starting, scratch, playerid))
 		#print etree.tostring (item, pretty_print = True)
 
@@ -247,7 +247,7 @@ def chop_ind_roster_branch (tree, anchor, team):
 
 		playerid = Operations.get_playerid (first_name, last_name)
 
-		roster_objects.append(Player(team, num, pos, first_name, last_name, \
+		roster_objects.append(R_Player(team, num, pos, first_name, last_name, \
 			captaincy, starting, scratch, playerid))
 
 	return roster_objects

@@ -188,7 +188,8 @@ def get_playerid(first_name, last_name):
 
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
-	c.execute("SELECT * FROM all_players WHERE first_name = ? AND last_name = ?",\
+	c.execute("SELECT * FROM all_players WHERE upper(first_name) = ? \
+			   AND upper(last_name) = ?",\
 		(first_name, last_name,))
 	temp_return = c.fetchall()
 

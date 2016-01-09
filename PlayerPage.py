@@ -9,14 +9,14 @@ from lxml import html, etree
 import requests
 import Operations
 
-class Player(object):
+class PP_Player(object):
 
 	def __init__(self):
 
 		self.playerid = None
 		self.last_nhl_season = None
 		self.current_num = None
-		self.position = None
+		self.position_page = None
 		self.height = None
 		self.weight = None
 		self.shoots = None # Because can be shoots OR catches
@@ -33,7 +33,7 @@ class Player(object):
 	def __str__(self):
 
 		num = ("#" + str(self.current_num).encode('utf-8')).ljust(4)
-		position = ("Pos " + str(self.position).encode('utf-8')).ljust(6)
+		position_page = ("Pos " + str(self.position_page).encode('utf-8')).ljust(6)
 		height = (" Hgt " + str(self.height).encode('utf-8')).ljust(9)
 		weight = (str(self.weight).encode('utf-8') + ' lbs').ljust(8)
 		shoots = ("Shts " + str(self.shoots).encode('utf-8')).ljust(12)
@@ -48,7 +48,7 @@ class Player(object):
 		twitter = ("Twt " + str(self.twitter).encode('utf-8')).ljust(10)
 		website = (" Site " + str(self.website).encode('utf-8')).ljust(20)
 
-		return num + position + height + weight + shoots + current_team \
+		return num + position_page + height + weight + shoots + current_team \
 			+ drafted + twitter + website
 
 class Season(object):
@@ -144,7 +144,7 @@ def prune_tombstone(tree):
 	Using passed xml tree, grab data from player tombstone
 	'''
 
-	temp_player = Player () # Container for player information
+	temp_player = PP_Player () # Container for player information
 	
 	info_raw = tree.xpath('//div[@id="tombstone"]/div/table//tr/td/text()')
 	website_raw = tree.xpath('//div[@id="tombstone"]//div[@id="playerSite"]/a/@href')
@@ -179,7 +179,7 @@ def prune_tombstone(tree):
 	except IndexError:
 		pass
 	try:
-		temp_player.position = position_raw [0][0]
+		temp_player.position_page = position_raw [0][0]
 	except IndexError:
 		pass
 	try:
@@ -187,7 +187,7 @@ def prune_tombstone(tree):
 	except IndexError:
 		pass
 	try:
-		temp_player.position = position_raw [0]
+		temp_player.position_page = position_raw [0]
 	except IndexError:
 		pass
 
@@ -227,7 +227,7 @@ def prune_season_field(field, output_type):
 
 	return temp_item
 
-def prune_career(position, playerid, seasons, season_type):
+def prune_career(position_table, playerid, seasons, season_type):
 	'''
 	Takes rows (seasons) from statistical table from player page on
 	nhl.com and return consolidated table. Tables summarize either regular 
@@ -236,7 +236,7 @@ def prune_career(position, playerid, seasons, season_type):
 	'''
 	seasons_pruned = []
 
-	if position == 'G':
+	if position_table == 'G':
 		for row_index, season in enumerate(seasons):
 
 			nhl_season_raw = season.get('style')
@@ -292,7 +292,7 @@ def prune_career(position, playerid, seasons, season_type):
 					overtime_loses, shutouts, goals_against, shots_against,
 					save_percentage, goals_against_average, minutes_played))
 
-	elif position != 'G':
+	elif position_table != 'G':
 		for row_index, season in enumerate(seasons):
 
 			nhl_season_raw = season.get('style')
@@ -361,7 +361,7 @@ def prune_last_nhl_season (regular_seasons, playoff_seasons):
 	
 	return last_nhl_season_str
 
-def harvest (playerid, position):
+def harvest (playerid, position_table):
 	'''
 	Grab supplemental information about player from their page on nhl.com
 	Information includes personal details ('tombstone') and season summaries
@@ -379,8 +379,8 @@ def harvest (playerid, position):
 	seasons_raw = tree.xpath('//div/div/h3[.="CAREER REGULAR SEASON STATISTICS"]/following-sibling::table[1]//tr')
 	playoffs_raw = tree.xpath('//div/div/h3[.="CAREER PLAYOFF STATISTICS"]/following-sibling::table[1]//tr')
 
-	player.regular_seasons = prune_career(position, playerid, seasons_raw, 0)
-	player.playoff_seasons = prune_career(position, playerid, playoffs_raw, 1)
+	player.regular_seasons = prune_career(position_table, playerid, seasons_raw, 0)
+	player.playoff_seasons = prune_career(position_table, playerid, playoffs_raw, 1)
 
 	player.last_nhl_season = prune_last_nhl_season (
 		player.regular_seasons, player.playoff_seasons)
