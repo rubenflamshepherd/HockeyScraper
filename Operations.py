@@ -1,5 +1,4 @@
 from lxml import html
-from Roster import Player
 import sqlite3
 
 #list for [url, city, team name, team acronym]
@@ -25,7 +24,7 @@ team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
              ['rangers', 'NEW YORK', 'RANGERS', 'NYR'],
              ['senators', 'OTTAWA', 'SENATORS', 'OTT'],
              ['flyers', 'PHILADELPHIA', 'FLYERS', 'PHI'],
-             ['coyotes', 'PHOENIX', 'COYOTES', 'PHX'],
+             ['coyotes', 'ARIZONA', 'COYOTES', 'PHX'],
              ['penguins', 'PITTSBURGH', 'PENGUINS', 'PIT'],
              ['sharks', 'SAN JOSE', 'SHARKS', 'S.J'],
              ['blues', 'ST. LOUIS', 'BLUES', 'STL'],

@@ -34,7 +34,7 @@ if __name__ == '__main__':
 	player_temp = PlayerPage.harvest(playerid, pos)
 	Database.ripen_player(player_temp)
 	'''
-	Database.germinate_all_players_table()
-	Database.germinate_seasons_table()
-	Database.grow_all_players()
+	#Database.germinate_all_players_table()
+	#Database.germinate_seasons_table()
+	#Database.grow_all_players()
 	Database.ripen_all_players()

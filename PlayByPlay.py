@@ -339,7 +339,7 @@ class Take(Event):
 
 class PlayByPlay (object):
 
-	def __init__(self, raw_events)
+	def __init__(self, raw_events):
 
 		self.raw_events = raw_events
 

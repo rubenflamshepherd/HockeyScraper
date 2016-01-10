@@ -52,19 +52,19 @@ def germinate_seasons_table():
 
 	c.execute ('DROP TABLE IF EXISTS {}'.format('goalie_seasons'))
 	c.execute('CREATE TABLE {} (\
-		key INTEGER PRIMARY KEY, playerid INTEGER, nhl_season INTEGER, season_type INTEGER,  \
-		year TEXT, team TEXT, games_played INTEGER, wins INTEGER, \
-		loses INTEGER, ties INTEGER, overtime_loses INTEGER, shutouts INTEGER, \
-		goals_against INTEGER, shots_against INTEGER, save_percentage REAL, \
-		goals_against_average REAL, minutes_played INTEGER\
-		)'.format('goalie_seasons'))
+		key INTEGER PRIMARY KEY, playerid INTEGER, nhl_season INTEGER, \
+		season_type INTEGER, year TEXT, team TEXT, games_played INTEGER, \
+		wins INTEGER, loses INTEGER, ties INTEGER, overtime_loses INTEGER, \
+		shutouts INTEGER, goals_against INTEGER, shots_against INTEGER, \
+		save_percentage REAL, goals_against_average REAL, \
+		minutes_played INTEGER)'.format('goalie_seasons'))
 
 	c.execute ('DROP TABLE IF EXISTS {}'.format('player_seasons'))
 	c.execute('CREATE TABLE {} (\
-		key INTEGER PRIMARY KEY, playerid INTEGER, nhl_season INTEGER, season_type INTEGER,  \
-		year TEXT, team TEXT, games_played INTEGER, goals INTEGER, \
-		assists INTEGER, points INTEGER, plus_minus INTEGER, pim INTEGER, \
-		powerplay_goals INTEGER, shorthanded_goals INTEGER, \
+		key INTEGER PRIMARY KEY, playerid INTEGER, nhl_season INTEGER, \
+		season_type INTEGER, year TEXT, team TEXT, games_played INTEGER, \
+		goals INTEGER, assists INTEGER, points INTEGER, plus_minus INTEGER, \
+		pim INTEGER, powerplay_goals INTEGER, shorthanded_goals INTEGER, \
 		gamewinning_goals INTEGER, shots INTEGER, shooting_percentage REAL\
 		)'.format('player_seasons'))
 	
@@ -100,9 +100,9 @@ def germinate_all_players_table():
 
 def prune_all_players_table_page(tree):
 	'''
-	Given a xml tree of a page of players from all the table containing all nhl
-	players, put information from each row into a local DB_Player object and return
-	a list of the players
+	Given a xml tree of a page of players from all the table containing all
+	nhl players, put information from each row into a local DB_Player object 
+	and return a list of the players
 	Used in func grow_all_players
 	'''
 
@@ -187,15 +187,20 @@ def grow_all_players():
 	# Grabing player ids from all players ever
 	checked_pages = []
 	
-	while len (checked_pages) < 1: # (364 pages as of 05/01/15)
-		page_num = random.randint(2,2)
+	while len (checked_pages) < 380: # (380 pages as of 05/01/15)
+		page_num = random.randint(1,380)
 		while page_num in checked_pages:
-			page_num += 1
+			if page_num == 380:
+				page_num = random.randint(1,380)
+			else:
+				page_num += 1
 		checked_pages.append (page_num)
-		print str(len(checked_pages)) + "/" + '3'
-		url = "http://www.nhl.com/ice/playersearch.htm?position=S&pg=%d"%page_num
-		
-		delay = random.randint(1,15)/60.0 # Disguise parsing signature from servers
+		print str(len(checked_pages)) + "/" + '380'
+		url = "http://www.nhl.com/ice/playersearch.htm?position=S&pg=%d"\
+			%page_num
+		print url		
+
+		delay = random.randint(1,15)/60.0 # Disguise parsing from servers
 		time.sleep (delay)
 		
 		page = requests.get (url)
@@ -210,29 +215,27 @@ def grow_all_players():
 		else:
 			temp_page = prune_all_players_table_page(tree)
 
-		# Insert records into db if they don't already exist
-		for player in temp_page:
-			
-			try:
-				c.execute(
-					"INSERT INTO all_players VALUES \
-					(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", \
-					(player.playerid, player.first_name, \
-					player.last_name, player.position_table, None, \
-					player.current_team, player.birth_date, \
-					player.birth_country, player.birth_state, \
-					player.birth_city, None, None, None, None, None, None, \
-					None, None, None, None,)
-					)
-					
-				print "ID %s added to db" %player.playerid
-				sql_additions +=1
-			except sqlite3.IntegrityError:
-				print "ERROR: ID %s already exists\
-					in primary key column"%playerid
-				sql_errors.append (playerid)
-
-		print url
+			# Insert records into db if they don't already exist
+			for player in temp_page:
+				
+				try:
+					c.execute(
+						"INSERT INTO all_players VALUES \
+						(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", \
+						(player.playerid, player.first_name, \
+						player.last_name, player.position_table, None, \
+						player.current_team, player.birth_date, \
+						player.birth_country, player.birth_state, \
+						player.birth_city, None, None, None, None, None, None, \
+						None, None, None, None,)
+						)
+						
+					# print "ID %s added to db" %player.playerid
+					sql_additions +=1
+				except sqlite3.IntegrityError:
+					print "ERROR: ID %s already exists\
+						in primary key column"%player.playerid
+					sql_errors.append (player.playerid)
 		
 	conn.commit ()
 	conn.close()
@@ -269,19 +272,19 @@ def ripen_season(c, table_name, season):
 	if table_name == 'goalie_seasons':
 		c.execute("INSERT INTO {} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"\
 			.format(table_name), (\
-				None, season.playerid, season.nhl_season, season.season_type, season.year, 
-				season.team, season.games_played, season.wins, season.loses,
-				season.ties, season.overtime_loses, season.shutouts, 
-				season.goals_against, season.shots_against, 
+				None, season.playerid, season.nhl_season, season.season_type, 
+				season.year, season.team, season.games_played, season.wins, 
+				season.loses, season.ties, season.overtime_loses, 
+				season.shutouts, season.goals_against, season.shots_against, 
 				season.save_percentage, season.goals_against_average, 
 				season.minutes_played,)
 				)
 	elif table_name == 'player_seasons':
 		c.execute("INSERT INTO {} VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"\
 			.format(table_name), (\
-				None, season.playerid, season.nhl_season, season.season_type, season.year, 
-				season.team, season.games_played, season.goals, season.assists,
-				season.points, season.plus_minus, season.pim, 
+				None, season.playerid, season.nhl_season, season.season_type,
+				season.year, season.team, season.games_played, season.goals, 
+				season.assists,	season.points, season.plus_minus, season.pim, 
 				season.powerplay_goals, season.shorthanded_goals, 
 				season.gamewinning_goals, season.shots, 
 				season.shooting_percentage,)
@@ -295,10 +298,12 @@ def ripen_player(c, player):
 	connetion 'c'
 	Used in func ripen_all_players
 	'''
+	
+	delay = random.randint(1,15)/60.0 # Disguise parsing from servers
+	time.sleep (delay)
 
 	ripen_tombstone (c, player)
-	print 'RIPENED ' + str(player.playerid) + player.position_page
-
+	
 	if player.position_page == 'Goalie':
 		for season in player.regular_seasons:
 			ripen_season(c, 'goalie_seasons', season)
@@ -318,22 +323,50 @@ def ripen_all_players():
 	Top level function
 	'''
 
+	# Tracking time it takes function to run/num of players grabbed
+	start_time = time.time()
+	num_players = 0
+	player_counter = 0
+
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
 
 	c.execute('SELECT * FROM all_players')
 
 	rows = c.fetchall()
-	for row in rows:
-		playerid = row[0]
-		position_table = row[3]
+
+	# Grabing player ids from all players ever
+	checked_players = []
+	upper_limit = len (rows)
+	
+	while len (checked_players) < upper_limit: # (380 pages as of 05/01/15)
+		index_num = random.randint(1, upper_limit)
+		while index_num in checked_players:
+			if index_num == upper_limit:
+				index_num = random.randint(1, upper_limit)
+			else:
+				index_num += 1
+		checked_players.append (index_num)
+		print (str(len(checked_players)) + "/" + str(upper_limit)).ljust(15),
+		
+		player_counter += 1				
+		playerid = rows[index_num][0]
+		position_table = rows[index_num][3]
+		print ('RIPENED ' + str(playerid)).ljust(30)
 		assert position_table in ['G', 'D', 'LW', 'C', 'RW'],\
 			'ERROR: position_table invalid (=%s)'%(position_table)
 		player = PlayerPage.harvest(playerid, position_table)
 		ripen_player(c, player)
+		num_players += 1
+				
 
 	conn.commit ()
 	conn.close()
+
+	total_time = time.time() - start_time
+	print "%0.2fs - total time taken" %total_time
+	print str(num_players), " - records imported"
+	print str(total_time/num_players) + 'secs/player'
 
 
 if __name__ == '__main__':

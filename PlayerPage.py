@@ -33,7 +33,8 @@ class PP_Player(object):
 	def __str__(self):
 
 		num = ("#" + str(self.current_num).encode('utf-8')).ljust(4)
-		position_page = ("Pos " + str(self.position_page).encode('utf-8')).ljust(6)
+		position_page = ("Pos " + str(self.position_page).encode('utf-8'))\
+			.ljust(6)
 		height = (" Hgt " + str(self.height).encode('utf-8')).ljust(9)
 		weight = (str(self.weight).encode('utf-8') + ' lbs').ljust(8)
 		shoots = ("Shts " + str(self.shoots).encode('utf-8')).ljust(12)
@@ -53,7 +54,8 @@ class PP_Player(object):
 
 class Season(object):
 
-	def __init__(self, nhl_season, season_type, playerid, year, team, games_played):
+	def __init__(self, nhl_season, season_type, playerid, year, team,
+		games_played):
 
 		self.nhl_season = nhl_season # 0 = other/1 = nhl season
 		self.season_type = season_type # 0 = reg season/1 = playoffs
@@ -64,11 +66,13 @@ class Season(object):
 
 class GoalieSeason(Season):
 
-	def __init__(self, nhl_season, season_type, playerid, year, team, games_played, wins, loses, ties,
-		overtime_loses, shutouts, goals_against, shots_against,
-		save_percentage, goals_against_average, minutes_played):
+	def __init__(self, nhl_season, season_type, playerid, year, team,
+		games_played, wins, loses, ties, overtime_loses, shutouts,
+		goals_against, shots_against, save_percentage, goals_against_average,
+		minutes_played):
 
-		Season.__init__(self, nhl_season, season_type, playerid, year, team, games_played)
+		Season.__init__(self, nhl_season, season_type, playerid, year, team,
+			games_played)
 		self.wins = wins
 		self.loses = loses
 		self.ties = ties
@@ -82,7 +86,7 @@ class GoalieSeason(Season):
 
 	def __str__(self):
 
-		year = ("\n" + self.year).ljust(11)
+		year = ("\n" + str(self.year)).ljust(11)
 		team = (self.team).ljust(12)
 		games_played = ("GP " + str(self.games_played)).ljust(6)
 		wins = ("W " + str(self.wins)).ljust(5)
@@ -93,20 +97,21 @@ class GoalieSeason(Season):
 		goals_against = ("GA " + str(self.goals_against)).ljust(8)
 		shots_against = ("SA " + str(self.shots_against)).ljust(9)
 		save_percentage = ("SA " + str(self.save_percentage)).ljust(8)
-		gaa = ("GAA " + str(self.gaa)).ljust(9)
+		goals_against_average = ("GAA " + str(self.goals_against_average)).ljust(9)
 		minutes_played = ("Min " + str(self.minutes_played)).ljust(10)
 		
 		return year + team + games_played + wins + loses + ties \
 			+ overtime_loses + shutouts + goals_against + save_percentage \
-			+ shots_against + gaa + minutes_played		
+			+ shots_against + goals_against_average + minutes_played		
 
 class PlayerSeason(Season):
 
-	def __init__(self, nhl_season, season_type, playerid, year, team, games_played, goals, assists, points, 
-		plus_minus, pim, powerplay_goals, shorthanded_goals, gamewinning_goals,
-		shots, shooting_percentage):
+	def __init__(self, nhl_season, season_type, playerid, year, team, 
+		games_played, goals, assists, points, plus_minus, pim, powerplay_goals,
+		shorthanded_goals, gamewinning_goals, shots, shooting_percentage):
 
-		Season.__init__(self, nhl_season, season_type, playerid, year, team, games_played)
+		Season.__init__(self, nhl_season, season_type, playerid, year, team,
+			games_played)
 		self.goals = goals
 		self.assists = assists
 		self.points = points
@@ -120,7 +125,7 @@ class PlayerSeason(Season):
 
 	def __str__(self):
 
-		year = ("\n" + self.year).ljust(11)
+		year = ("\n" + str(self.year)).ljust(11)
 		team = (self.team).ljust(12)
 		games_played = ("GP " + str(self.games_played)).ljust(6)
 		goals = ("G " + str(self.goals)).ljust(5)
@@ -160,8 +165,11 @@ def prune_tombstone(tree):
 		if item == "NUMBER:":
 			temp_player.current_num = next(info_iter)
 		elif item == "HEIGHT:":
-			height_raw = next(info_iter).split ("\' ")
-			temp_player.height = height_raw[0] + ',' + height_raw[1].strip('"')
+			try:
+				height_raw = next(info_iter).split ("\' ")
+				temp_player.height = height_raw[0] + ',' + height_raw[1].strip('"')
+			except IndexError:
+				temp_player.height = None
 		elif item == "WEIGHT:":
 			temp_player.weight = next(info_iter)
 		elif item == "DRAFTED:":
@@ -227,6 +235,17 @@ def prune_season_field(field, output_type):
 
 	return temp_item
 
+def prune_nhl_season(row_style):
+	'''
+	Given the xml style attribute of the season row, return whether that row
+	is an nhl season
+	'''
+	if row_style == 'font-weight: bold;':
+		return 1
+	else:
+		return 0
+
+
 def prune_career(position_table, playerid, seasons, season_type):
 	'''
 	Takes rows (seasons) from statistical table from player page on
@@ -235,113 +254,98 @@ def prune_career(position_table, playerid, seasons, season_type):
 	season_type = 0/1 for regular/playoff season
 	'''
 	seasons_pruned = []
+	season_iter = iter(seasons)
+	next(season_iter) # Skip column titles
 
 	if position_table == 'G':
-		for row_index, season in enumerate(seasons):
-
-			nhl_season_raw = season.get('style')
-			if nhl_season_raw == 'font-weight: bold;':
-				nhl_season = 1
-			else:
-				nhl_season = 0
-
+		for season in season_iter:
+			nhl_season = prune_nhl_season(season.get('style'))
 			season_fields = season.xpath('./td')
-			# Grabbbing row (season) information 
-			# Avoiding first and last (Header+Total rows)
-			if row_index != 0 and row_index != len(seasons)-1:
-				# Iterating through fields in season
-				field_index = 0
-				# No enumerate because playoffs and reg season are different
-				for field in season_fields:
-					if field_index == 0:
-						year = prune_season_field (field, 'str')
-					elif field_index == 1:
-						team = prune_season_field (field, 'str')
-					elif field_index == 2:
-						games_played = prune_season_field (field, 'int')						
-					elif field_index == 3:
-						wins = prune_season_field (field, 'int')
-					elif field_index == 4:
-						loses = prune_season_field (field, 'int')
-					elif field_index == 5 and season_type == 0:
-						ties = prune_season_field (field, 'int')
-					elif field_index == 5 and season_type == 1:
-						ties = None
-						overtime_loses = None
-						shutouts = prune_season_field (field, 'int')
-						field_index += 2
-					elif field_index == 6 and season_type == 0:
-						overtime_loses = prune_season_field (field, 'int')
-					elif field_index == 7 and season_type == 0:
-						shutouts = prune_season_field (field, 'int')
-					elif field_index == 8:
-						goals_against = prune_season_field (field, 'int')
-					elif field_index == 9:
-						shots_against = prune_season_field (field, 'int')
-					elif field_index == 10:
-						save_percentage = prune_season_field (field, 'float')
-					elif field_index == 11:
-						goals_against_average = prune_season_field (field, 'float')
-					elif field_index == 12:
-						minutes_played = prune_season_field (field, 'int')
+			# Iterating through fields in season
+			field_index = 0
+			# No enumerate because playoffs and reg season are different
+			for field in season_fields:
+				if field_index == 0:
+					year = prune_season_field (field, 'str')
+				elif field_index == 1:
+					team = prune_season_field (field, 'str')
+				elif field_index == 2:
+					games_played = prune_season_field (field, 'int')						
+				elif field_index == 3:
+					wins = prune_season_field (field, 'int')
+				elif field_index == 4:
+					loses = prune_season_field (field, 'int')
+				elif field_index == 5 and season_type == 0:
+					ties = prune_season_field (field, 'int')
+				elif field_index == 5 and season_type == 1:
+					ties = None
+					overtime_loses = None
+					shutouts = prune_season_field (field, 'int')
+					field_index += 2
+				elif field_index == 6 and season_type == 0:
+					overtime_loses = prune_season_field (field, 'int')
+				elif field_index == 7 and season_type == 0:
+					shutouts = prune_season_field (field, 'int')
+				elif field_index == 8:
+					goals_against = prune_season_field (field, 'int')
+				elif field_index == 9:
+					shots_against = prune_season_field (field, 'int')
+				elif field_index == 10:
+					save_percentage = prune_season_field (field, 'float')
+				elif field_index == 11:
+					goals_against_average = prune_season_field (field,
+						'float')
+				elif field_index == 12:
+					minutes_played = prune_season_field (field, 'int')
 
-					field_index += 1
+				field_index += 1
 				
-				seasons_pruned.append (GoalieSeason(
-					nhl_season, season_type, playerid, year, team, games_played, wins, loses, ties, 
-					overtime_loses, shutouts, goals_against, shots_against,
-					save_percentage, goals_against_average, minutes_played))
+			seasons_pruned.append (GoalieSeason(
+				nhl_season, season_type, playerid, year, team, 
+				games_played, wins, loses, ties, overtime_loses, shutouts,
+				goals_against, shots_against, save_percentage, 
+				goals_against_average, minutes_played))
 
 	elif position_table != 'G':
-		for row_index, season in enumerate(seasons):
-
-			nhl_season_raw = season.get('style')
-			if nhl_season_raw == 'font-weight: bold;':
-				nhl_season = 1
-			else:
-				nhl_season = 0
-
+		for season in season_iter:
+			nhl_season = prune_nhl_season(season.get('style'))
 			season_fields = season.xpath('./td')
-
 			# Grabbbing row (season) information 
-			# Avoiding first and last (Header+Total rows)
-			if row_index != 0 and row_index != len(seasons)-1:
-				# Iterating through fields in season
-				field_index = 0
-				# Can use enumerate because playoffs and reg season the same
-				for field_index, field in enumerate(season_fields):
-					if field_index == 0:
-						year = prune_season_field (field, 'str')
-					elif field_index == 1:
-						team = prune_season_field (field, 'str')
-					elif field_index == 2:
-						games_played = prune_season_field (field, 'int')						
-					elif field_index == 3:
-						goals = prune_season_field (field, 'int')
-					elif field_index == 4:
-						assists = prune_season_field (field, 'int')
-					elif field_index == 5:
-						points = prune_season_field (field, 'int')
-					elif field_index == 6:
-						plus_minus = prune_season_field (field, 'int')
-					elif field_index == 7:
-						pim = prune_season_field (field, 'int')
-					elif field_index == 8:
-						powerplay_goals = prune_season_field (field, 'int')
-					elif field_index == 9:
-						shorthanded_goals = prune_season_field (field, 'int')
-					elif field_index == 10:
-						gamewinning_goals = prune_season_field (field, 'int')
-					elif field_index == 11:
-						shots = prune_season_field (field, 'int')
-					elif field_index == 12:
-						shooting_percentage = prune_season_field (field, 'float')
+			# Can use enumerate because playoffs and reg season the same
+			for field_index, field in enumerate(season_fields):
+				if field_index == 0:
+					year = prune_season_field (field, 'str')
+				elif field_index == 1:
+					team = prune_season_field (field, 'str')
+				elif field_index == 2:
+					games_played = prune_season_field (field, 'int')						
+				elif field_index == 3:
+					goals = prune_season_field (field, 'int')
+				elif field_index == 4:
+					assists = prune_season_field (field, 'int')
+				elif field_index == 5:
+					points = prune_season_field (field, 'int')
+				elif field_index == 6:
+					plus_minus = prune_season_field (field, 'int')
+				elif field_index == 7:
+					pim = prune_season_field (field, 'int')
+				elif field_index == 8:
+					powerplay_goals = prune_season_field (field, 'int')
+				elif field_index == 9:
+					shorthanded_goals = prune_season_field (field, 'int')
+				elif field_index == 10:
+					gamewinning_goals = prune_season_field (field, 'int')
+				elif field_index == 11:
+					shots = prune_season_field (field, 'int')
+				elif field_index == 12:
+					shooting_percentage = prune_season_field (field,
+						'float')
 				
-				seasons_pruned.append (PlayerSeason(
-					nhl_season, season_type, playerid, year, team, 
-					games_played, goals, assists, points, plus_minus, pim,
-					powerplay_goals, shorthanded_goals, 
-					gamewinning_goals, shots, shooting_percentage))
+			seasons_pruned.append (PlayerSeason(
+				nhl_season, season_type, playerid, year, team, 
+				games_played, goals, assists, points, plus_minus, pim,
+				powerplay_goals, shorthanded_goals, 
+				gamewinning_goals, shots, shooting_percentage))
 
 	return seasons_pruned					
 
@@ -353,7 +357,7 @@ def prune_last_nhl_season (regular_seasons, playoff_seasons):
 	last_nhl_season_int = None
 	last_nhl_season_str = None
 	for season in regular_seasons + playoff_seasons:
-		if season.nhl_season == 1:
+		if season.nhl_season == 1 and season.year:
 			year_raw = season.year.split('-')
 			if last_nhl_season_int < year_raw[1]:
 				last_nhl_season_int = year_raw[1]
@@ -402,5 +406,6 @@ if __name__ == '__main__':
 
 	for season in player.regular_seasons:
 		print season
+	print player
 
 	# print etree.tostring (seasons_raw[0], pretty_print = True)
