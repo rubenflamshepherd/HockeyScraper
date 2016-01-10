@@ -337,17 +337,19 @@ def ripen_all_players():
 
 	# Grabing player ids from all players ever
 	checked_players = []
-	upper_limit = len (rows)
-	
-	while len (checked_players) < upper_limit: # (380 pages as of 05/01/15)
-		index_num = random.randint(1, upper_limit)
+	num_rows = len(rows)
+	max_index = len (rows) - 1
+
+	 # (380 pages/18196 rows as of 05/01/15)	
+	while len (checked_players) < num_rows:
+		index_num = random.randint(0, max_index)
 		while index_num in checked_players:
-			if index_num == upper_limit:
-				index_num = random.randint(1, upper_limit)
+			if index_num == max_index:
+				index_num = random.randint(0, max_index)
 			else:
 				index_num += 1
 		checked_players.append (index_num)
-		print (str(len(checked_players)) + "/" + str(upper_limit)).ljust(15),
+		print (str(len(checked_players)) + "/" + str(num_rows)).ljust(15),
 		
 		player_counter += 1				
 		playerid = rows[index_num][0]
@@ -358,9 +360,8 @@ def ripen_all_players():
 		player = PlayerPage.harvest(playerid, position_table)
 		ripen_player(c, player)
 		num_players += 1
-				
-
-	conn.commit ()
+		conn.commit ()
+	
 	conn.close()
 
 	total_time = time.time() - start_time

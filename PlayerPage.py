@@ -392,7 +392,7 @@ def harvest (playerid, position_table):
 	return player
 	
 if __name__ == '__main__':
-	playerid = 8471716
+	playerid = 8444962
 	# Db connection to grab player position (and update with grabbed data later)
 	conn = sqlite3.connect('nhl.db')
 	c = conn.cursor()
