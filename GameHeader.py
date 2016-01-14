@@ -15,11 +15,11 @@ class GameHeader:
 		self.arena = arena
 		self.game_num = game_num
 		self.away_score = away_score
-		self.away_team = away_team
+		self.away_team = away_team # as acronym
 		self.away_team_game_num = away_team_game_num
 		self.away_team_away_game_num = away_team_away_game_num
 		self.home_score = home_score
-		self.home_team = home_team
+		self.home_team = home_team # as acronym
 		self.home_team_game_num = home_team_game_num
 		self.home_team_home_game_num = home_team_home_game_num
 
@@ -172,4 +172,5 @@ def harvest (year, game_num, report_type, game_type):
 		)
 
 if __name__ == '__main__':
-	print harvest ('20152016', '0002', 'PL', '02')
+	temp = harvest ('20152016', '0002', 'PL', '02')
+	print temp.game_start.year

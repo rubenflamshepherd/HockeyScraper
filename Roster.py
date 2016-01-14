@@ -178,38 +178,27 @@ def chop_officials_branch (tree):
 		# print temp_official
 
 	return referees, linesmen
-		
-def chop_ind_roster_branch (tree, anchor, team):
-	"""
-	Extract indivudal information from an xml tree and return list 
-	of roster objects. anchor is 'visitor' or 'home' (used to anchor xml tree)
-	"""
 
-	roster_objects = []
-
-	if anchor == 'home':
-		x, y = 6, 8
-	else:
-		x, y = 5, 7
-
-	# Skipping first item in iterable roster
-	iter_roster = iter(tree[x].xpath('./tr'))
-	next (iter_roster)
+def prune_roster_parts (tree, scratch, team, years, roster_objects):
+	'''
+	Given xml tree of a part of a roster (either scratched or nonscratched 
+	list as tree), construct and add R_Player objects to roster_objects list
+	'''
+	iter_roster = iter(tree)
+	next(iter_roster)
 
 	for item in iter_roster:
-		
-		scratch = 0
+
 		captaincy = None
 		num = item.xpath('./td/text()')[0]
-		pos = item.xpath('./td/text()')[1]
+		position = item.xpath('./td/text()')[1]
 
 		temp_starting = item.xpath ('./td/@class')[0]
 		starting = 0
 		if 'bold' in temp_starting:
 			starting = 1
 
-		temp_name_raw = item.xpath('./td/text()')[2]	
-		
+		temp_name_raw = item.xpath('./td/text()')[2]		
 		temp_name_raw_split = temp_name_raw.split()
 		first_name = temp_name_raw_split[0]
 
@@ -222,33 +211,33 @@ def chop_ind_roster_branch (tree, anchor, team):
 
 		last_name = " ".join(temp_name_raw_split[1:])
 
-		playerid = Operations.get_playerid (first_name, last_name)
+		playerid = Operations.get_playerid (
+			first_name, last_name, team, years, position)
 
-		roster_objects.append(R_Player(team, num, pos, first_name, last_name, \
-			captaincy, starting, scratch, playerid))
-		#print etree.tostring (item, pretty_print = True)
-
-	iter_scratches = iter(tree[y].xpath('./tr'))
-	next (iter_scratches)
-
-	for item in iter_scratches:
+		roster_objects.append(R_Player(team, num, position, first_name, 
+			last_name, captaincy, starting, scratch, playerid))
 		
-		scratch = 1
-		captaincy = None
-		starting = 0
-		num = item.xpath('./td/text()')[0]
-		pos = item.xpath('./td/text()')[1]
-		
-		temp_name_raw = item.xpath('./td/text()')[2]
-		temp_name_raw_split = temp_name_raw.split()
+def chop_ind_roster_branch (tree, anchor, game_info, years):
+	"""
+	Extract indivudal information from an xml tree and return list 
+	of roster objects. anchor is 'visitor' or 'home' (used to anchor xml tree)
+	"""
 
-		first_name = temp_name_raw_split[0]
-		last_name = " ".join(temp_name_raw_split[1:])
+	roster_objects = []
 
-		playerid = Operations.get_playerid (first_name, last_name)
+	if anchor == 'away':
+		x, y = 5, 7
+		team = game_info.away_team
+	elif anchor == 'home':
+		x, y = 6, 8
+		team = game_info.home_team
+	else:
+		assert False, "ERROR: anchor passed to chop_ind_roster_branch invalid"
 
-		roster_objects.append(R_Player(team, num, pos, first_name, last_name, \
-			captaincy, starting, scratch, playerid))
+	tree_active = tree[x].xpath('./tr')
+	tree_scratches = tree[y].xpath('./tr')
+	prune_roster_parts (tree_active, 0, team, years, roster_objects)
+	prune_roster_parts (tree_scratches, 1, team, years, roster_objects)
 
 	return roster_objects
 
@@ -264,8 +253,8 @@ def harvest (year, game_num):
 
 	tables = tree.xpath('//table//table//table//table')
 
-	away_roster = chop_ind_roster_branch (tables, 'visitor', game_info.away_team)
-	home_roster = chop_ind_roster_branch (tables, 'home', game_info.home_team)
+	away_roster = chop_ind_roster_branch (tables, 'away', game_info, year)
+	home_roster = chop_ind_roster_branch (tables, 'home', game_info, year)
 	
 	away_coach, home_coach = chop_coach_branch(tables)
 	away_coach.team = game_info.away_team
@@ -278,4 +267,6 @@ def harvest (year, game_num):
 		)
 
 if __name__ == '__main__':
-	print harvest('20152016', '0002')
+	for x in range (1,100):
+		game_num = Operations.pad_game_num(x)
+		print harvest('20142015', game_num)

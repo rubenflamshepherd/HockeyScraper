@@ -51,7 +51,7 @@ def harvest (season, start_game, finish_game, game_type):
 				
 				if check != ['404 Not Found']:
 					temp_file = open (files_path + file_name, 'w')
-					temp_file.write (report.text)
+					temp_file.write (report.text.encode('utf-8'))
 					temp_file.close()
 					delay = randint(1,15)/60.0
 					total_delay += delay
@@ -61,7 +61,6 @@ def harvest (season, start_game, finish_game, game_type):
 				else:
 					not_found_urls.append (url)
 					print file_name + " - 404 ERROR, NOT FOUND"
-
 	
 	total_time = time.time() - start_time
 	print str(imported_counter), " - files imported"
@@ -76,4 +75,4 @@ def harvest (season, start_game, finish_game, game_type):
 		print item
 
 if __name__ == '__main__':
-	harvest ('20152016', 1, 20, '02')
+	harvest ('20142015', 1, 201, '02')

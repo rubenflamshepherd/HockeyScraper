@@ -150,8 +150,38 @@ def team_name_to_acronym (team_name):
 			team_acronym = item[-1]
 
 			return team_acronym
-	print [team_name]
+	
 	assert False, "ERROR: cannot convert %s to acronym"%(team_name)
+
+def team_acronym_to_titlecase (team_acronym):
+	'''
+	given a team acronym, return name of that team in titlecase
+	'''
+
+	for item in team_list:
+
+		if team_acronym == item[-1]:
+
+			team_titlecase = item[2].title()
+
+			return team_titlecase
+	
+	assert False, "ERROR: cannot convert %s to titlecase"%(team_acronym)
+
+def team_acronym_to_uppercase (team_acronym):
+	'''
+	given a team acronym, return name of that team in titlecase
+	'''
+
+	for item in team_list:
+
+		if team_acronym == item[-1]:
+
+			team_titlecase = (item[1] + ' ' + item[2]).upper()
+
+			return team_titlecase
+	
+	assert False, "ERROR: cannot convert %s to titlecase"%(team_acronym)
 
 
 def index_containing_substring(the_list, substring):
@@ -179,25 +209,53 @@ def pad_game_num (game_num):
 	else:
 		print "problem with padding game number (Operations.pad_game_num)"
 
-def get_playerid(first_name, last_name):
+def get_playerid(first_name, last_name, team_acronym, year_raw, position_table):
 	'''
 	Given a player's first name and last name, return their playerid as found 
-	in nhl.db
+	in nhl.db. If more than one player have supplied first_name/last_name
+	combo then check seasons and match team/year/playerid
 	'''
+	# Setting up function
+	team_name = team_acronym_to_titlecase(team_acronym)
+	if position_table == 'G':
+		season_table = 'goalie_seasons'
+	else:
+		season_table = 'player_seasons'
+	year = "-".join([year_raw[:4],year_raw[4:]])
 
+	# Grabbing ALL players with first_name/last_name combo	
 	conn = sqlite3.connect ('nhl.db')
 	c = conn.cursor ()
 	c.execute("SELECT * FROM all_players WHERE upper(first_name) = ? \
-			   AND upper(last_name) = ?",\
-		(first_name, last_name,))
-	temp_return = c.fetchall()
-
-	if len (temp_return) != 1:
-		print str(temp_return) + '\n'
-
-	assert len(temp_return) == 1, "ERROR: more than one player with that first/last name combo"
+			   AND upper(last_name) = ?", (first_name, last_name,))
 	
-	conn.commit ()
-	conn.close()
+	matching_players = c.fetchall()
+	'''
+	Sometimes first names are different from table to game sheet
+	When this happens NO player is returned and we must do a wider search 
+	for the player
+	'''
+	if len(matching_players) == 0:
+		c.execute("SELECT * FROM all_players WHERE upper(last_name) = ?",
+			(last_name,))
+		matching_players = c.fetchall()
 
-	return temp_return [0][0]
+	# From the players we have grabbed 
+	if len(matching_players) == 1:
+		playerid = matching_players[0][0]
+		return playerid
+	# If more than 1 player is grabbed, cross reference seasons to match
+	else:
+		for player in matching_players:
+			playerid = player[0]
+			c.execute("SELECT * FROM {} WHERE playerid = ? AND year = ? \
+				AND team = ?".format(season_table), (playerid, year, team_name))
+
+			matching_season = c.fetchall()
+			if len(matching_season) > 0:
+				conn.close()
+				return playerid
+
+	# Error checking
+	print matching_players
+	assert False, "ERROR: > 1 matching first/last name w/o matching nhl season"
