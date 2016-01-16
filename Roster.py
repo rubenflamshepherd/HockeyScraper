@@ -49,11 +49,11 @@ class R_Player:
 
 	def __str__(self):
 
-		num = ("#" + self.num.encode('utf-8')).ljust(4)
-		pos = ("Pos " + self.pos.encode('utf-8')).ljust(6)
+		num = ("#" + str(self.num).encode('utf-8')).ljust(4)
+		pos = ("Pos " + str(self.pos).encode('utf-8')).ljust(6)
 
-		name_raw = self.team + ' ' + self.first_name.encode('utf-8') + ' ' \
-			+ self.last_name.encode('utf-8')
+		name_raw = str(self.team) + ' ' + str(self.first_name).encode('utf-8') + ' ' \
+			+ str(self.last_name).encode('utf-8')
 		name = (name_raw).ljust(25)
 
 		captaincy = ("A/C " + str(self.captaincy)).ljust(9)

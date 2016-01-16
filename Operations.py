@@ -3,6 +3,7 @@ import sqlite3
 
 #list for [url, city, team name, team acronym]
 team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
+			 ['coyotes', 'ARIZONA', 'COYOTES', 'ARI'],
              ['bruins', 'BOSTON', 'BRUINS', 'BOS'],
              ['sabres', 'BUFFALO', 'SABRES', 'BUF'],
              ['flames', 'CALGARY', 'FLAMES', 'CGY'],
@@ -24,7 +25,7 @@ team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
              ['rangers', 'NEW YORK', 'RANGERS', 'NYR'],
              ['senators', 'OTTAWA', 'SENATORS', 'OTT'],
              ['flyers', 'PHILADELPHIA', 'FLYERS', 'PHI'],
-             ['coyotes', 'ARIZONA', 'COYOTES', 'PHX'],
+             ['coyotes', 'PHOENIX', 'COYOTES', 'PHX'],
              ['penguins', 'PITTSBURGH', 'PENGUINS', 'PIT'],
              ['sharks', 'SAN JOSE', 'SHARKS', 'S.J'],
              ['blues', 'ST. LOUIS', 'BLUES', 'STL'],
@@ -108,30 +109,43 @@ def germinate_report_seed (year, game_num, report_type, game_type):
 
 	return html.fromstring(read_data)
 
-def team_responsible(winning_zone, winning_team, away_team, home_team, event):
+def team_responsible(event_index, event_list):
 	'''
 	Given an event (icing, goalie stoppage, etc.) that results in an faceoff
 	in an offending teams zone,	discern the team responsible and return 
 	them (as 3 letter acronym) and their on ice players
 	'''
+	event = event_list[event_index]
+	counter = event_index + 1
+	next_event = event_list[counter]
+
+	# Sometimes events are logged (penalties, shots, etc) are logged
+	# between STOP and subsequent FAC event
+	while next_event.event_type != 'FAC':
+		counter += 1
+		next_event = event_list[counter]
+
+	next_description_raw = next_event.description.split ()
+	winning_team = next_description_raw[0]
+	winning_zone = next_description_raw[2]
 
 	if winning_zone == "Def.":
 
-		if winning_team == home_team:
-			stopping_team = home_team
+		if winning_team == event.home_team_acronym:
+			stopping_team = event.home_team_acronym
 			stopping_on_ice = event.home_on_ice
 
-		elif winning_team == away_team:
-			stopping_team = away_team
+		elif winning_team == event.away_team_acronym:
+			stopping_team = event.away_team_acronym
 			stopping_on_ice = event.away_on_ice
 	else:
 
-		if winning_team == home_team:
-			stopping_team = away_team
+		if winning_team == event.home_team_acronym:
+			stopping_team = event.away_team_acronym
 			stopping_on_ice = event.away_on_ice
 
-		elif winning_team == away_team:
-			stopping_team = home_team
+		elif winning_team == event.away_team_acronym:
+			stopping_team = event.home_team_acronym
 			stopping_on_ice = event.home_on_ice
 
 	return stopping_team, stopping_on_ice
