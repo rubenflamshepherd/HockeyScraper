@@ -75,4 +75,4 @@ def harvest (season, start_game, finish_game, game_type):
 		print item
 
 if __name__ == '__main__':
-	harvest ('20142015', 1, 201, '02')
+	harvest ('20142015', 1, 401, '02')

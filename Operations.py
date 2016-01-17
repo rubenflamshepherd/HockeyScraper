@@ -131,21 +131,21 @@ def team_responsible(event_index, event_list):
 
 	if winning_zone == "Def.":
 
-		if winning_team == event.home_team_acronym:
-			stopping_team = event.home_team_acronym
+		if winning_team == event.home_acronym:
+			stopping_team = event.home_acronym
 			stopping_on_ice = event.home_on_ice
 
-		elif winning_team == event.away_team_acronym:
-			stopping_team = event.away_team_acronym
+		elif winning_team == event.away_acronym:
+			stopping_team = event.away_acronym
 			stopping_on_ice = event.away_on_ice
 	else:
 
-		if winning_team == event.home_team_acronym:
-			stopping_team = event.away_team_acronym
+		if winning_team == event.home_acronym:
+			stopping_team = event.away_acronym
 			stopping_on_ice = event.away_on_ice
 
-		elif winning_team == event.away_team_acronym:
-			stopping_team = event.home_team_acronym
+		elif winning_team == event.away_acronym:
+			stopping_team = event.home_acronym
 			stopping_on_ice = event.home_on_ice
 
 	return stopping_team, stopping_on_ice
@@ -198,7 +198,7 @@ def team_acronym_to_uppercase (team_acronym):
 	assert False, "ERROR: cannot convert %s to titlecase"%(team_acronym)
 
 
-def index_containing_substring(the_list, substring):
+def substring_index(the_list, substring):
     for i, s in enumerate(the_list):
         if substring in s:
               return i
