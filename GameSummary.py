@@ -270,8 +270,15 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 		temp_goal = item.xpath('.//td/text()')
 		temp_xpath = item.xpath('.//td')
 		
-		goal_num = temp_goal[0]
-		period_num = temp_goal[1]
+		goal_num = int(temp_goal[0])
+		period_num_raw = temp_goal[1]
+		if period_num_raw == 'OT':
+			period_num = 4
+		elif period_num_raw == 'SO':
+			period_num = 5
+		else:
+			period_num = int(period_num_raw)
+
 		time = temp_goal[2]
 		strength = temp_goal[3]
 		scoring_team = temp_goal[4]
@@ -360,7 +367,13 @@ def chop_penalties_branch (tree, roster):
 	for item in iter_penalties:
 		item_parts = item.xpath('./td/text()')
 		pen_num = item_parts[0]
-		period_num = item_parts[1]
+		period_num_raw = item_parts[1]
+		if period_num_raw == 'OT':
+			period_num = 4
+		elif period_num_raw == 'SO':
+			period_num = 5
+		else:
+			period_num = int(period_num_raw)
 		pen_time = item_parts[2]
 		pen_length = item_parts[5]
 		pen_type = item_parts[6].replace('(','').replace(')','')
@@ -478,9 +491,8 @@ def chop_goalie_branch(tree):
 						else:
 							status = None
 
-						anchor = Operations.index_containing_substring(
-							name_raw, ","
-							)
+						anchor = Operations.substring_index(
+							name_raw, ",")[0]
 
 						last_name = (" ".join(name_raw[:anchor + 1])).strip(',')
 						first_name = " ".join(name_raw[anchor + 1:])

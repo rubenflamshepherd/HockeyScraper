@@ -4,36 +4,36 @@ import sqlite3
 #list for [url, city, team name, team acronym]
 team_list = [['ducks', 'ANAHEIM', 'DUCKS', 'ANA'],
 			 ['coyotes', 'ARIZONA', 'COYOTES', 'ARI'],
-             ['bruins', 'BOSTON', 'BRUINS', 'BOS'],
-             ['sabres', 'BUFFALO', 'SABRES', 'BUF'],
-             ['flames', 'CALGARY', 'FLAMES', 'CGY'],
-             ['hurricanes', 'CAROLINA', 'HURRICANES', 'CAR'],
-             ['blackhawks', 'CHICAGO', 'BLACKHAWKS', 'CHI'],
-             ['avalanche', 'COLORADO', 'AVALANCHE', 'COL'],
-             ['bluejackets', 'COLUMBUS', 'BLUE JACKETS', 'CBJ'],
-             ['stars', 'DALLAS', 'STARS', 'DAL'],          
-             ['redwings', 'DETROIT', 'RED WINGS', 'DET'],
-             ['oilers', 'EDMONTON', 'OILERS', 'EDM'],
-             ['panthers', 'FLORIDA', 'PANTHERS', 'FLA'],
-             ['kings', 'LOS ANGELES', 'KINGS', 'L.A'],
-             ['wild', 'MINNESOTA', 'WILD', 'MIN'],
-             ['canadiens', 'MONTREAL', 'CANADIENS', 'MTL'],
-             ['canadiens', u'MONTR\xc9AL', 'CANADIENS', 'MTL'], #unicode accent
-             ['predators', 'NASHVILLE', 'PREDATORS', 'NSH'],
-             ['devils', 'NEW JERSEY', 'DEVILS', 'N.J'],
-             ['islanders', 'NEW YORK', 'ISLANDERS', 'NYI'],
-             ['rangers', 'NEW YORK', 'RANGERS', 'NYR'],
-             ['senators', 'OTTAWA', 'SENATORS', 'OTT'],
-             ['flyers', 'PHILADELPHIA', 'FLYERS', 'PHI'],
-             ['coyotes', 'PHOENIX', 'COYOTES', 'PHX'],
-             ['penguins', 'PITTSBURGH', 'PENGUINS', 'PIT'],
-             ['sharks', 'SAN JOSE', 'SHARKS', 'S.J'],
-             ['blues', 'ST. LOUIS', 'BLUES', 'STL'],
-             ['lightning', 'TAMPA BAY', 'LIGHTNING', 'T.B'],
-             ['mapleleafs', 'TORONTO', 'MAPLE LEAFS', 'TOR'],
-             ['canucks', 'VANCOUVER', 'CANUCKS', 'VAN'],
-             ['capitals', 'WASHINGTON', 'CAPITALS', 'WSH'],
-             ['jets', 'WINNIPEG', 'JETS', 'WPG']]
+			 ['bruins', 'BOSTON', 'BRUINS', 'BOS'],
+			 ['sabres', 'BUFFALO', 'SABRES', 'BUF'],
+			 ['flames', 'CALGARY', 'FLAMES', 'CGY'],
+			 ['hurricanes', 'CAROLINA', 'HURRICANES', 'CAR'],
+			 ['blackhawks', 'CHICAGO', 'BLACKHAWKS', 'CHI'],
+			 ['avalanche', 'COLORADO', 'AVALANCHE', 'COL'],
+			 ['bluejackets', 'COLUMBUS', 'BLUE JACKETS', 'CBJ'],
+			 ['stars', 'DALLAS', 'STARS', 'DAL'],          
+			 ['redwings', 'DETROIT', 'RED WINGS', 'DET'],
+			 ['oilers', 'EDMONTON', 'OILERS', 'EDM'],
+			 ['panthers', 'FLORIDA', 'PANTHERS', 'FLA'],
+			 ['kings', 'LOS ANGELES', 'KINGS', 'L.A'],
+			 ['wild', 'MINNESOTA', 'WILD', 'MIN'],
+			 ['canadiens', 'MONTREAL', 'CANADIENS', 'MTL'],
+			 ['canadiens', u'MONTR\xc9AL', 'CANADIENS', 'MTL'], #unicode accent
+			 ['predators', 'NASHVILLE', 'PREDATORS', 'NSH'],
+			 ['devils', 'NEW JERSEY', 'DEVILS', 'N.J'],
+			 ['islanders', 'NEW YORK', 'ISLANDERS', 'NYI'],
+			 ['rangers', 'NEW YORK', 'RANGERS', 'NYR'],
+			 ['senators', 'OTTAWA', 'SENATORS', 'OTT'],
+			 ['flyers', 'PHILADELPHIA', 'FLYERS', 'PHI'],
+			 ['coyotes', 'PHOENIX', 'COYOTES', 'PHX'],
+			 ['penguins', 'PITTSBURGH', 'PENGUINS', 'PIT'],
+			 ['sharks', 'SAN JOSE', 'SHARKS', 'S.J'],
+			 ['blues', 'ST. LOUIS', 'BLUES', 'STL'],
+			 ['lightning', 'TAMPA BAY', 'LIGHTNING', 'T.B'],
+			 ['mapleleafs', 'TORONTO', 'MAPLE LEAFS', 'TOR'],
+			 ['canucks', 'VANCOUVER', 'CANUCKS', 'VAN'],
+			 ['capitals', 'WASHINGTON', 'CAPITALS', 'WSH'],
+			 ['jets', 'WINNIPEG', 'JETS', 'WPG']]
 
 def convert_month_str(month_raw):
 	month_dic = {
@@ -117,17 +117,31 @@ def team_responsible(event_index, event_list):
 	'''
 	event = event_list[event_index]
 	counter = event_index + 1
+	subtractor = event_index - 1
 	next_event = event_list[counter]
+	prev_event = event_list[subtractor]
+	
+	# Check that FAC following stop is not logged BEFORE the stop
+	while prev_event.event_type != 'FAC':
+		subtractor -= 1
+		prev_event = event_list[subtractor]
 
-	# Sometimes events are logged (penalties, shots, etc) are logged
-	# between STOP and subsequent FAC event
-	while next_event.event_type != 'FAC':
-		counter += 1
-		next_event = event_list[counter]
-
-	next_description_raw = next_event.description.split ()
-	winning_team = next_description_raw[0]
-	winning_zone = next_description_raw[2]
+	if prev_event.time == event.time:
+		prev_description_raw = prev_event.description.split ()
+		winning_team = prev_description_raw[0]
+		winning_zone =prev_description_raw[2]
+	else:
+		# Sometimes events are logged (penalties, shots, etc) are logged
+		# between STOP and subsequent FAC event
+		try:
+			while next_event.event_type != 'FAC':
+				counter += 1
+				next_event = event_list[counter]
+			next_description_raw = next_event.description.split ()
+			winning_team = next_description_raw[0]	
+			winning_zone = next_description_raw[2]
+		except IndexError:
+			return None, None
 
 	if winning_zone == "Def.":
 
@@ -199,10 +213,16 @@ def team_acronym_to_uppercase (team_acronym):
 
 
 def substring_index(the_list, substring):
-    for i, s in enumerate(the_list):
-        if substring in s:
-              return i
-    return -1
+	'''
+	Previously index_contatining_substring
+	'''
+	indexs = []
+	for i, s in enumerate(the_list):
+		if substring in s:
+			indexs.append(i)
+
+	return indexs
+
 
 def pad_game_num (game_num):
 
@@ -223,7 +243,7 @@ def pad_game_num (game_num):
 	else:
 		print "problem with padding game number (Operations.pad_game_num)"
 
-def get_playerid(first_name, last_name, team_acronym, year_raw, position_table):
+def get_playerid(first_name, last_name, team_acronym, year_raw, position_roster):
 	'''
 	Given a player's first name and last name, return their playerid as found 
 	in nhl.db. If more than one player have supplied first_name/last_name
@@ -231,7 +251,7 @@ def get_playerid(first_name, last_name, team_acronym, year_raw, position_table):
 	'''
 	# Setting up function
 	team_name = team_acronym_to_titlecase(team_acronym)
-	if position_table == 'G':
+	if position_roster == 'G':
 		season_table = 'goalie_seasons'
 	else:
 		season_table = 'player_seasons'
@@ -269,6 +289,19 @@ def get_playerid(first_name, last_name, team_acronym, year_raw, position_table):
 			if len(matching_season) > 0:
 				conn.close()
 				return playerid
+		# At this point the player has not yet recorded a season for the team
+		# Must match using less ideal parameters (position)
+		for player in matching_players:
+			playerid = player[0]
+			# position_roster is 1 char, position_table is up to 2
+			c.execute("SELECT * FROM {} WHERE playerid = ? \
+				AND SUBSTR(position_table, 1) = ?".format('all_players'),\
+				(playerid, position_roster))
+
+			matching_player = c.fetchall()
+			if len(matching_player) == 1:
+				print matching_player
+				return playerid			
 
 	# Error checking
 	print matching_players

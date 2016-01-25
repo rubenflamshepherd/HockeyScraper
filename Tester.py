@@ -62,32 +62,17 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 		self.assertEqual(len(self.playbyplay.goals), len(self.game_summary.goals))
 
 		for index, pbp_goal in enumerate(self.playbyplay.goals):
+
 			gs_goal = self.game_summary.goals[index]
 
-			self.assertEqual(
-				gs_goal.goal_num, \
-				str(index + 1)
-				)
-			self.assertEqual(
-				gs_goal.period_num, \
-				pbp_goal.period_num
-				)
-			self.assertEqual(
-				gs_goal.time, \
-				pbp_goal.time
-				)						
-			self.assertEqual(
-				gs_goal.scoring_player, \
-				pbp_goal.scoring_player
-				)
-			self.assertEqual(
-				gs_goal.prim_assist_player, \
-				pbp_goal.prim_assist_player
-				)
-			self.assertEqual(
-				gs_goal.sec_assist_player, \
-				pbp_goal.sec_assist_player
-				)
+			self.assertEqual(gs_goal.goal_num, index + 1)
+			self.assertEqual(gs_goal.period_num, pbp_goal.period_num)
+			self.assertEqual(gs_goal.time, pbp_goal.time)						
+			self.assertEqual(gs_goal.scoring_player, pbp_goal.scoring_player)
+			self.assertEqual(gs_goal.prim_assist_player, 
+				pbp_goal.prim_assist_player)
+			self.assertEqual(gs_goal.sec_assist_player, 
+				pbp_goal.sec_assist_player)
 
 	def test_penalties(self):
 
@@ -107,26 +92,13 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 				gs_penalty = self.game_summary.home_penalties[home_counter]
 				home_counter += 1
 
+			self.assertEqual(gs_penalty.period_num, pbp_penalty.period_num)
+			self.assertEqual(gs_penalty.time, pbp_penalty.time)
+			self.assertEqual(gs_penalty.length, pbp_penalty.length)
+			self.assertEqual(gs_penalty.penalized_player, 
+				pbp_penalty.penalized_player)
 			self.assertEqual(
-				gs_penalty.period_num, \
-				pbp_penalty.period_num
-				)
-			self.assertEqual(
-				gs_penalty.time, \
-				pbp_penalty.time
-				)
-			self.assertEqual(
-				gs_penalty.length, \
-				pbp_penalty.length
-				)
-			self.assertEqual(
-				gs_penalty.penalized_player, \
-				pbp_penalty.penalized_player
-				)
-			self.assertEqual(
-				gs_penalty.penalty_type, \
-				pbp_penalty.penalty_type
-				)
+				gs_penalty.penalty_type, pbp_penalty.penalty_type)
 
 	def test_byperiod (self):
 

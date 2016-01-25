@@ -207,8 +207,8 @@ class Miss(Event):
 
 	def __str__(self):
 
-		shot_type = (self.shot_type.encode('utf-8')).ljust(8)		
-		miss_type = (self.miss_type.encode('utf-8')).ljust(7)		
+		shot_type = (str(self.shot_type).encode('utf-8')).ljust(8)		
+		miss_type = (str(self.miss_type).encode('utf-8')).ljust(7)		
 		distance = (str(self.distance).encode('utf-8')).ljust(4)
 		shooting_player = ('SP ' + self.shooting_player.show).ljust(15)		
 		blocking_player = ('BP ' + self.blocking_player.show).ljust(15)
@@ -358,6 +358,47 @@ class PlayByPlay (object):
 
 		self.raw_events = raw_events
 		self.pruned_events = pruned_events
+		self.blocks = []
+		self.faceoffs = []
+		self.give_takeaways = []
+		self.goals = []
+		self.hits = []
+		self.misses = []
+		self.penalties = []
+		self.shots = []
+		self.stops = []
+		self.start_ends = []
+
+		for event in self.pruned_events:
+			if event.event_type == 'BLOCK':
+				self.blocks.append(event)
+			elif event.event_type == 'EGT' or event.event_type == 'EGPID':
+				# No idea what these events are so just......
+				pass
+			elif event.event_type == 'FAC':
+				self.faceoffs.append(event)
+			elif event.event_type == 'GIVE' or event.event_type == 'TAKE':
+				self.give_takeaways.append(event)
+			elif event.event_type == 'GOAL':
+				self.goals.append(event)
+			elif event.event_type == 'GOFF':
+				pass
+			elif event.event_type == 'HIT':
+				self.hits.append(event)
+			elif event.event_type == 'MISS':
+				self.misses.append(event)
+			elif event.event_type == 'PENL':
+				self.penalties.append(event)
+			elif event.event_type == 'SHOT':
+				self.shots.append(event)
+			elif event.event_type == 'SOC':
+				pass
+			elif event.event_type == 'STOP':
+				self.stops.append(event)
+			elif event.event_type == 'GEND' or event.event_type == 'PEND' \
+					or event.event_type == 'PSTR' or event.event_type == 'EISTR' \
+					or event.event_type == 'EIEND':
+				self.start_ends.append(event)
 
 def prune_name(name_raw):
 	'''
@@ -404,8 +445,20 @@ def raw_harvest (year, game_num, away_acronym, home_acronym,
 		strength = unicode(event_raw[2])
 		time = unicode(event_raw[3])
 		event_type = unicode(event_raw[5])
-		zone = None # Zone is not initially parsed in raw harvest
 		description = unicode(event_raw[6])
+		try: # Zone not always indicated in event description
+			# A bit redudant, done also before pruning events
+			description_raw = description.split()
+			zone_index = description_raw.index('Zone,') - 1
+			zone = description_raw[zone_index]
+		except ValueError:
+			try: # Certain events have zone at end of description
+				zone_index = description_raw.index('Zone') - 1
+				zone = description_raw[zone_index]
+			except ValueError:
+				zone = None
+		assert zone == 'Neu.' or zone == 'Off.' or zone == 'Def.' \
+			or zone == None, "ERROR: Event zone(%s) invalid"%(zone)
 
 		# Goals have an additional row in the description cell for assists
 		if event_type == 'GOAL' and event_raw[7].find('Assist') != -1:
@@ -430,55 +483,59 @@ def raw_harvest (year, game_num, away_acronym, home_acronym,
 
 def prune_block(event, description_raw, game_personnel):
 
-	zone = description_raw[-2]
+	block_anchor = Operations.substring_index(description_raw, 'BLOCKED')[0]
+	delim_index = Operations.substring_index(description_raw, ',')[0] + 1
+	assert block_anchor != -1 and delim_index != 0, "ERROR - Anchor not found"
+	assert 'Zone' in description_raw, "ERROR - 'Zone' not found"
+
 	shot_type = description_raw[-3].strip(',')
-	shooting_team = description_raw[0]
-	shooting_num = description_raw[1].strip('#')
 
-	keyword_index = Operations.substring_index(description_raw, 'BLOCKED')
-	delim_index = Operations.substring_index(description_raw, ',') + 1
-
-	assert keyword_index != -1 and delim_index != 0, "ERROR - Anchor not found"
-
-	shooting_name = " ".join(description_raw[2:keyword_index])
-
-	blocking_team = description_raw[keyword_index + 2]
-	blocking_num = description_raw[keyword_index + 3].strip('#')
+	blocking_team = description_raw[block_anchor + 2]
+	blocking_num = description_raw[block_anchor + 3].strip('#')
 	blocking_name = (
-		" ".join(description_raw[keyword_index + 4: delim_index])).strip (',')
+		" ".join(description_raw[block_anchor + 4: delim_index])).strip (',')
 
-	if shooting_team == event.away_acronym:
+	if blocking_team == event.home_acronym:
 		shooting_on_ice = event.away_on_ice
 		shooting_roster = game_personnel.away_roster
 		blocking_on_ice = event.home_on_ice
 		blocking_roster = game_personnel.home_roster
-	elif shooting_team == event.home_acronym:
+	elif blocking_team == event.away_acronym:
 		shooting_on_ice = event.home_on_ice
 		shooting_roster = game_personnel.home_roster
 		blocking_on_ice = event.away_on_ice
 		blocking_roster = game_personnel.away_roster
 	else:
-		assert False, 'ERROR: shooting_team doesnt match home or away team'
+		assert False, 'ERROR: shooting_team(%s) doesnt match home (%s) or away\
+			(%s) team'%(shooting_team, event.away_acronym, event.home_acronym)
 		
-	shooting_player =  clone_rosterplayer(
-		shooting_num, shooting_name, shooting_roster)
+	if block_anchor >= 3:
+		shooting_name = " ".join(description_raw[2:block_anchor])
+		shooting_team = description_raw[0]
+		shooting_num = description_raw[1].strip('#')
+		shooting_player =  clone_rosterplayer(
+			shooting_num, shooting_name, shooting_roster)
+	else: # NHL fucked up; loaded a blank shooter
+		if blocking_team == event.away_acronym:
+			shooting_team = event.home_acronym
+		elif blocking_team == event.home_acronym:
+			shooting_team = event.home_acronym
+		shooting_player = Roster.return_null_player()
+
 	blocking_player =  clone_rosterplayer(
 		blocking_num, blocking_name, blocking_roster)
 
 	return Block(
 		event.num, event.period_num, event.strength, event.time,
-		event.event_type, zone,	event.description, event.away_acronym,
+		event.event_type, event.zone,	event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, shot_type, shooting_player, blocking_player,
 		shooting_team, blocking_team)
 
 def prune_fac (event, description_raw, game_personnel):
 
-	zone = description_raw[2]
 	winning_team = description_raw[0]
-
 	vs_anchor = description_raw.index('vs')
-
 	away_team = description_raw[5]
 	away_num = description_raw[6].strip('#')
 	away_name = " ".join(description_raw[7:vs_anchor])
@@ -508,17 +565,16 @@ def prune_fac (event, description_raw, game_personnel):
 
 	return FaceOff(
 		event.num, event.period_num, event.strength, event.time, 
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice, event.home_on_ice,
 		winning_player, losing_player, winning_team, losing_team)
 
 def prune_give_take(event, description_raw, game_personnel):
 
-	zone = description_raw[-2]
 	givetake_team = description_raw[0]
 	givetake_num = description_raw[3].strip('#')
 
-	delim_anchor = Operations.substring_index(description_raw, ',') + 1
+	delim_anchor = Operations.substring_index(description_raw, ',')[0] + 1
 
 	assert delim_anchor != 0, "ERROR - Anchor not found"
 
@@ -539,13 +595,13 @@ def prune_give_take(event, description_raw, game_personnel):
 	if event.event_type == 'GIVE':
 		return Give(
 			event.num, event.period_num, event.strength, event.time,
-			event.event_type, zone, event.description, event.away_acronym,
+			event.event_type, event.zone, event.description, event.away_acronym,
 			event.home_acronym, event.away_on_ice, event.home_on_ice, 
 			givetake_player, givetake_team)
 	elif event.event_type == 'TAKE':
 		return Take(
 			event.num, event.period_num, event.strength, event.time,
-			event.event_type, zone, event.description, event.away_acronym,
+			event.event_type, event.zone, event.description, event.away_acronym,
 			event.home_acronym, event.away_on_ice, event.home_on_ice, 
 			givetake_player, givetake_team)
 
@@ -570,10 +626,10 @@ def prune_goal(event, description_raw, game_personnel):
 		defending_roster = game_personnel.home_roster
 		defending_team = event.home_acronym
 		
-	name_anchor = Operations.substring_index(description_raw, ',') + 1
+	name_anchor = Operations.substring_index(description_raw, ',')[0] + 1
 	shot_anchor = Operations.substring_index(
-		description_raw[name_anchor:], ',') + name_anchor + 1
-	distance_anchor = Operations.substring_index(description_raw, 'ft.')
+		description_raw[name_anchor:], ',')[0] + name_anchor + 1
+	distance_anchor = Operations.substring_index(description_raw, 'ft.')[0]
 
 	scoring_name_raw = " ".join(description_raw[2:name_anchor])
 	scoring_name = prune_name(scoring_name_raw)
@@ -582,13 +638,10 @@ def prune_goal(event, description_raw, game_personnel):
 	
 	shot_type = (" ".join(description_raw[name_anchor:shot_anchor])).strip(',')
 	distance = description_raw[distance_anchor - 1]
-	zone = description_raw[distance_anchor - 3]
-	assert zone == 'Neu.' or zone == 'Off.' or zone == 'Def.',\
-		"ERROR: Scoring zone invalid"
-	
+
 	if 'Assist:' in description_raw:
 		assist_anchor = Operations.substring_index(
-			description_raw, 'Assist:') + 1
+			description_raw, 'Assist:')[0] + 1
 		
 		prim_assist_num = description_raw[assist_anchor].strip('#')
 		prim_assist_name_raw = " ".join(description_raw[assist_anchor + 1:])
@@ -598,9 +651,9 @@ def prune_goal(event, description_raw, game_personnel):
 		
 	elif 'Assists:' in description_raw:
 		assist_anchor = Operations.substring_index(
-			description_raw, 'Assists:') + 1
+			description_raw, 'Assists:')[0] + 1
 		sec_assist_anchor = Operations.substring_index(
-			description_raw, ';') + 1
+			description_raw, ';')[0] + 1
 		
 		prim_assist_num = description_raw[assist_anchor].strip('#')
 		prim_assist_name_raw = (
@@ -623,7 +676,7 @@ def prune_goal(event, description_raw, game_personnel):
 
 	return Goal(
 		event.num, event.period_num, event.strength, event.time,
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, shot_type, distance, scoring_player,
 		scoring_team, prim_assist_player, sec_assist_player,
@@ -639,65 +692,75 @@ def prune_goff (event, description_raw):
 
 def prune_hit(event, description_raw, game_personnel):
 
-	zone = description_raw[-2]
-	hitting_team = description_raw[0]
-	hitting_num = description_raw[1].strip('#')
+	hit_anchor = description_raw.index('HIT')
+	delim_anchors = Operations.substring_index(description_raw, ',') 
+	assert hit_anchor != -1, "ERROR - Anchor not found"
 
-	hit_anchor = Operations.substring_index(description_raw, 'HIT')
-	delim_anchor = Operations.substring_index(description_raw, ',') + 1
-
-	assert hit_anchor != -1 and delim_anchor != 0, "ERROR - Anchor not found"
-
-	hitting_name = " ".join(description_raw[2:hit_anchor])
+	if delim_anchors == []: # No zone entered in nhl report
+		hit_name = (" ".join(
+			description_raw[hit_anchor + 3:])).strip (',')
+	else:
+		name_anchor = delim_anchors[0] + 1
+		hit_name = (" ".join(
+			description_raw[hit_anchor + 3: name_anchor])).strip (',')
 
 	hit_team = description_raw[hit_anchor + 1]
 	hit_num = description_raw[hit_anchor + 2].strip('#')
-	hit_name = (" ".join(
-		description_raw[hit_anchor + 3: delim_anchor])).strip (',')
-
-	if hitting_team == event.away_acronym:
+	
+	if hit_team == event.home_acronym:
 		hitting_on_ice = event.away_on_ice
 		hitting_roster = game_personnel.away_roster
 		hit_on_ice = event.home_on_ice
 		hit_roster = game_personnel.home_roster
-		assert hit_team == event.home_acronym, \
-			"ERROR: hit team assignment failure"
-	elif hitting_team == event.home_acronym:
+	elif hit_team == event.away_acronym:
 		hitting_on_ice = event.home_on_ice
 		hitting_roster = game_personnel.home_roster
 		hit_on_ice = event.away_on_ice
 		hit_roster = game_personnel.away_roster
-		assert hit_team == event.away_acronym, \
-			"ERROR: hit team assignment failure"
+	else:
+		assert False, 'ERROR: hit_team(%s) doesnt match home (%s) or away\
+			(%s) team'%(hit_team, event.away_acronym, event.home_acronym)
 
-	hitting_player = clone_rosterplayer(
-		hitting_num, hitting_name, hitting_roster)
-	hit_player = clone_rosterplayer(
-		hit_num, hit_name, hit_roster)
+	if hit_anchor >= 3:
+		hitting_team = description_raw[0]
+		hitting_num = description_raw[1].strip('#')
+		hitting_name = " ".join(description_raw[2:hit_anchor])
+		hitting_player = clone_rosterplayer(
+			hitting_num, hitting_name, hitting_roster)
+	else:# NHL fucked up; loaded a blank hitter
+		if hit_team == event.away_acronym:
+			hitting_team = event.home_acronym
+		elif hit_team == event.home_acronym:
+			hitting_team = event.home_acronym
+		hitting_player = Roster.return_null_player()
+
+	hit_player = clone_rosterplayer(hit_num, hit_name, hit_roster)
 
 	return Hit(
 		event.num, event.period_num, event.strength, event.time,
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, hitting_player, hit_player, hitting_team,
 		hit_team)
 
 def prune_miss(event, description_raw, game_personnel):
 
+	delim_anchors = Operations.substring_index(description_raw, ',')
+	delim_anchor = delim_anchors[0] + 1	
+	assert delim_anchor != 0, "ERROR - Anchor not found"
+	
+	if len(delim_anchors) < 4: # Part of info is missing-usually shot/miss type
+		shot_type = None
+		miss_type = None
+	else:
+		shot_type = description_raw[-8].strip(',')
+		miss_type = (" ".join(description_raw[delim_anchor + 1:-4])).strip(',')
+
 	distance = description_raw[-2]
-	zone = description_raw[-4]
-	shot_type = description_raw[-8].strip(',')
 	shooting_team = description_raw[0]
 	shooting_num = description_raw[1].strip('#')
 
-	delim_anchor = Operations.substring_index(description_raw, ',') + 1
-	
-	assert delim_anchor != 0, "ERROR - Anchor not found"
-
-	miss_type = (" ".join(description_raw[delim_anchor + 1:-4])).strip(',')
-
 	shooting_name = (" ".join(description_raw[2:delim_anchor])).strip(',')
-
 	shooting_player = (shooting_num, shooting_name)
 
 	if shooting_team == event.away_acronym:
@@ -725,7 +788,7 @@ def prune_miss(event, description_raw, game_personnel):
 	
 	return Miss(
 		event.num, event.period_num, event.strength, event.time,
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, shot_type, miss_type, distance, shooting_player,
 		blocking_player, shooting_team, blocking_team)
@@ -803,16 +866,10 @@ def prune_penl(event, description_raw, event_index, event_list, game_personnel):
 
 	length = regex_split[penalty_end]
 	penalty_type = " ".join(regex_split[penalty_start:penalty_end])
-	
-	try:
-		zone_anchor = description_raw.index('Zone') - 1
-		zone = description_raw [zone_anchor]
-	except ValueError:
-		zone = None
 
 	return Penalty(
 		event.num, event.period_num, event.strength, event.time,
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, penalty_type, length, penalized_player,
 		serving_player, drawing_player,	penalized_team_acronym,	drawing_team)
@@ -830,13 +887,13 @@ def prune_soc(event, description_raw):
 		event.home_on_ice, end_time, time_zone)
 
 def prune_shot(event, description_raw, game_personnel):
-	zone = description_raw[-4]
+	
 	distance = description_raw[-2]
 	shot_type = description_raw[-5].strip(',')
 	shooting_team = description_raw[0]
 	shooting_num = description_raw[3].strip('#')
 
-	delim_anchor = Operations.substring_index(description_raw, ',') + 1
+	delim_anchor = Operations.substring_index(description_raw, ',')[0] + 1
 
 	assert delim_anchor != 0, "ERROR - Anchor not found"
 
@@ -862,7 +919,7 @@ def prune_shot(event, description_raw, game_personnel):
 	
 	return Shot(
 		event.num, event.period_num, event.strength, event.time, 
-		event.event_type, zone, event.description, event.away_acronym,
+		event.event_type, event.zone, event.description, event.away_acronym,
 		event.home_acronym, event.away_on_ice,
 		event.home_on_ice, shot_type, distance, shooting_player, 
 		blocking_player, shooting_team, blocking_team)
@@ -891,7 +948,7 @@ def prune_start_end(event, event_description, description_raw):
 		assert False, 'ERROR: Start/End find() failure'
 
 
-def prune_stop(event, description_raw, event_index, event_list):
+def prune_stop(event, description_raw, event_index, event_list, game_personnel):
 
 	stopping_player = Roster.return_null_player()
 	stopping_team = None
@@ -944,6 +1001,9 @@ def prune_event(event_index, event_list, game_personnel):
 	# print description_raw
 	if event.event_type == 'BLOCK':
 		return prune_block(event, description_raw, game_personnel)
+	elif event.event_type == 'EGT' or event.event_type == 'EGPID':
+		# No idea what these events are so just......
+		return event
 	elif event.event_type == 'FAC':
 		return prune_fac(event, description_raw, game_personnel)
 	elif event.event_type == 'GIVE' or event.event_type == 'TAKE':
@@ -963,7 +1023,7 @@ def prune_event(event_index, event_list, game_personnel):
 	elif event.event_type == 'SOC':
 		return prune_soc(event, description_raw)
 	elif event.event_type == 'STOP':
-		return prune_stop(event, description_raw, event_index, event_list)
+		return prune_stop(event, description_raw, event_index, event_list, game_personnel)
 	elif event.event_type == 'GEND' or event.event_type == 'PEND' \
 			or event.event_type == 'PSTR' or event.event_type == 'EISTR' \
 			or event.event_type == 'EIEND':
@@ -978,18 +1038,18 @@ def harvest (year, game_num, report_type, game_type, game_info, game_personnel):
 	PlayByPlay object with which we run tests/create sql tables
 	'''
 
-	raw_events = raw_harvest (year, game_num, game_info.away_team,
+	raw_events = raw_harvest(year, game_num, game_info.away_team,
 		game_info.home_team, game_personnel.away_roster,
 		game_personnel.home_roster)
 	pruned_events = []
 
 	for index, event in enumerate(raw_events):
 
-		pruned_event = prune_event(
-			index, raw_events, game_personnel)
+		pruned_event = prune_event(index, raw_events, game_personnel)
 		pruned_events.append(pruned_event)
-		#if pruned_event.event_type == 'PSTR':
+		#if pruned_event.event_type == 'HIT':
 		#	print pruned_event
+			
 		
 	return PlayByPlay(raw_events, pruned_events)
 
@@ -999,7 +1059,7 @@ if __name__ == '__main__':
 	report_type = 'PL'
 	game_type = '02'
 
-	for game_num_raw in range (300, 400):
+	for game_num_raw in range (966,1100):
 		game_num = Operations.pad_game_num (game_num_raw)
 		
 		game_info = GameHeader.harvest(year, game_num, report_type, game_type)
