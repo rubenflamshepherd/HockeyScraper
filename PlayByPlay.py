@@ -1059,7 +1059,7 @@ if __name__ == '__main__':
 	report_type = 'PL'
 	game_type = '02'
 
-	for game_num_raw in range (966,1100):
+	for game_num_raw in range (7,8):
 		game_num = Operations.pad_game_num (game_num_raw)
 		
 		game_info = GameHeader.harvest(year, game_num, report_type, game_type)
@@ -1067,3 +1067,6 @@ if __name__ == '__main__':
 		temp_pbp = harvest(year, game_num, report_type, game_type, game_info, game_personnel)
 
 		print game_info
+		for item in temp_pbp.pruned_events:
+			if item.event_type == 'PENL':
+				print item

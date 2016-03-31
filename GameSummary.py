@@ -21,9 +21,9 @@ class Goal (object):
 
 	def __str__ (self):
 
-		goal_num = ("G#: " + self.goal_num.encode('utf-8')).ljust(6)
-		period_num = ("P#: " + self.period_num.encode('utf-8')).ljust(6)
-		strength = ("Str: " + self.strength.encode('utf-8')).ljust(8)
+		goal_num = ("G#: " + str(self.goal_num).encode('utf-8')).ljust(6)
+		period_num = ("P#: " + str(self.period_num).encode('utf-8')).ljust(6)
+		strength = ("Str: " + str(self.strength).encode('utf-8')).ljust(8)
 		scoring_team = ('Tm: ' + self.scoring_team.encode('utf-8')).ljust(8)
 		scoring_player = ('SP: ' + str(self.scoring_player.num) + ' ' \
 			+ str(self.scoring_player.last_name)).ljust(17)
@@ -48,8 +48,8 @@ class Penalty(object):
 		self.penalized_player = penalized_player
 
 	def __str__ (self):
-		pen_num = ("Pen#: " + self.penalty_num.encode('utf-8')).ljust(8)
-		period_num = ("Per#: " + self.period_num.encode('utf-8')).ljust(8)
+		pen_num = ("Pen#: " + str(self.penalty_num).encode('utf-8')).ljust(8)
+		period_num = ("Per#: " + str(self.period_num).encode('utf-8')).ljust(8)
 		pen_time = ("Time: " + self.time.encode('utf-8')).ljust(12)
 		pen_length = ("Len: " + self.length.encode('utf-8')).ljust(8)
 		penalized_player = ('PP: ' + str(self.penalized_player.num) + ' ' \
@@ -70,7 +70,7 @@ class Period(object):
 
 	def __str__(self):
 
-		period_num = ("Per#: " + self.period_num.encode('utf-8')).ljust(8)
+		period_num = ("Per#: " + str(self.period_num).encode('utf-8')).ljust(8)
 		num_goals = ("#G: " + self.num_goals.encode('utf-8')).ljust(8)
 		num_shots = ("#S: " + self.num_shots.encode('utf-8')).ljust(8)
 		num_penalties = ("#Pen: " + self.num_penalties.encode('utf-8')) \
@@ -252,8 +252,8 @@ def clone_rosterplayer (num, last_name, roster):
 		if player.num == num and player.last_name == last_name:
 
 			return player
-
-	assert False, "ERROR: no matching player for %s %s" % (num, last_name)
+	print num
+	assert False, "ERROR: no matching player for %s" %last_name
 
 def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 	'''
@@ -269,19 +269,29 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 	for item in iter_goals:
 		temp_goal = item.xpath('.//td/text()')
 		temp_xpath = item.xpath('.//td')
+
+		goal_num_temp = temp_goal[0]
+		if goal_num_temp == '-': # Unsuccessful penalty shot, skip
+			continue
+		goal_num = int(goal_num_temp)
+
+		strength = temp_goal[3]
+		time = temp_goal[2]
 		
-		goal_num = int(temp_goal[0])
 		period_num_raw = temp_goal[1]
+		print period_num_raw
+		scoring_team_index = 4
 		if period_num_raw == 'OT':
 			period_num = 4
 		elif period_num_raw == 'SO':
-			period_num = 5
+			period_num = 5	
+			scoring_team_index = 3		
+			strength = None
+			time = None
 		else:
 			period_num = int(period_num_raw)
-
-		time = temp_goal[2]
-		strength = temp_goal[3]
-		scoring_team = temp_goal[4]
+			
+		scoring_team = temp_goal[scoring_team_index]
 		if scoring_team == away_team:
 			scoring_roster = away_roster
 		elif scoring_team == home_team:
@@ -289,7 +299,8 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 		else:
 			assert True, "ERROR: scoring team has no match"
 
-		scoring_player_raw = temp_goal [5].split()
+		# Split to seperate num
+		scoring_player_raw = temp_goal[scoring_team_index + 1].split() 
 		scoring_num = scoring_player_raw[0]
 		
 		name_raw = " ".join(scoring_player_raw[1:])
@@ -297,7 +308,10 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 		anchor2 = name_raw.find("(")
 
 		scoring_initial = name_raw[:anchor1]
-		scoring_last_name = name_raw[anchor1 + 1: anchor2]
+		if anchor2 != -1:
+			scoring_last_name = name_raw[anchor1 + 1: anchor2]
+		else:
+			scoring_last_name = name_raw[anchor1 + 1:]
 
 		scoring_player = clone_rosterplayer(
 			scoring_num, \
@@ -322,7 +336,7 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 				scoring_roster
 				)
 
-		except IndexError:
+		except: # Used to be except IndexError... Hopefully that's not a prob
 			prim_assist_player = Roster.return_null_player()
 		
 		try:
@@ -342,11 +356,15 @@ def chop_goals_branch (tree, away_team, home_team, away_roster, home_roster):
 				scoring_roster
 				)
 
-		except IndexError:
+		except: # Used to be except IndexError... Hopefully that's not a prob
 			sec_assist_player = Roster.return_null_player()
 		
-		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[8], away_roster)
-		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[9], home_roster)
+		if strength == 'EV-PS':
+			on_ice_index = 7
+		else:
+			on_ice_index = 8
+		away_on_ice = Operations.chop_on_ice_branch (temp_xpath[on_ice_index], away_roster)
+		home_on_ice = Operations.chop_on_ice_branch (temp_xpath[on_ice_index + 1], home_roster)
 
 		goals.append(Goal(goal_num, period_num, time, strength, scoring_team, \
 			scoring_player, prim_assist_player, sec_assist_player, \
@@ -380,9 +398,15 @@ def chop_penalties_branch (tree, roster):
 		
 		player_raw = item.xpath('./td/table/tr/td/text()')
 		player_num = player_raw[0]
-		player_initial = player_raw[3][0]
-		player_name = player_raw[3][2:] # First inital infront of name
-		penalized_player = clone_rosterplayer(player_num, player_name, roster) 
+
+		player_name_index = player_name = player_raw[3].find('.')
+		if player_name_index == 1:
+			player_initial = player_raw[3][0]
+			player_name = player_raw[3][2:] # First inital infront of name
+			penalized_player = clone_rosterplayer(player_num, player_name, roster) 
+		else:
+			assert player_raw[3] == 'TEAM', 'ERROR: nonplayer penalized object not "TEAM"'
+			penalized_player = Roster.return_null_player()
 
 		temp = Penalty(
 			pen_num, period_num, pen_time, pen_length, pen_type, penalized_player
@@ -559,7 +583,7 @@ def chop_officials_branch(tree):
 	
 	return linesmen, referees	
 
-def chop_stars_branch(tree):
+def chop_stars_branch(tree, away_team, home_team, away_roster, home_roster):
 	'''
 	Given a table (as an xml tree) return lists containing Goalie
 	objects for each team. Table also contains officials
@@ -575,13 +599,27 @@ def chop_stars_branch(tree):
 
 	for item in stars_raw:
 		star_num = item.xpath('./td/text()')[0].strip('.')
-		team = item.xpath('./td/text()')[1]
-		pos = item.xpath('./td/text()')[2]
-		name_raw = item.xpath('./td/text()')[3].split()
-		player_num = name_raw [0]
+		try:
+			team = item.xpath('./td/text()')[1]
+			if team == away_team:
+				roster = away_roster
+			elif team == home_team:
+				roster = home_roster
+			pos = item.xpath('./td/text()')[2]
+			star_raw = item.xpath('./td/text()')[3].split()
+			player_num = star_raw [0]
+			name_raw = " ".join(star_raw[1:])
+			anchor = name_raw.find('.')
+			scoring_initial = name_raw[:anchor]
+			last_name = name_raw[anchor + 1:]
 
-		anchor = name_raw[1].find('.')
-		last_name = name_raw[1][anchor + 1:]
+			star = clone_rosterplayer(player_num, last_name, roster )			
+		except IndexError: # Sometimes stars are not given
+			team = None
+			pos = None
+			player_num = None
+
+
 		stars.append((star_num, team, player_num, last_name))
 	
 	#print etree.tostring (stars_raw, pretty_print = True)
@@ -598,24 +636,16 @@ def harvest (year, game_num, game_info, game_personnel):
 	tables = tree.xpath('//table[@id="MainTable"]/tr/td/table')
 	
 	# Skipping first item in iterable roster
-	goals = chop_goals_branch (
-		tables[2].xpath('.//tr'), \
-		game_info.away_team, \
-		game_info.home_team, \
-		game_personnel.away_roster, \
-		game_personnel.home_roster
-		)
+	goals = chop_goals_branch (tables[2].xpath('.//tr'), game_info.away_team, \
+		game_info.home_team, game_personnel.away_roster,  \
+		game_personnel.home_roster)
 		
 	penalties_raw = tables[4].xpath('./tr/td/table/tr/td/table/tr/td/table')
 	
-	away_penalties = chop_penalties_branch (
-		penalties_raw[0], \
-		game_personnel.away_roster
-		)
-	home_penalties = chop_penalties_branch (
-		penalties_raw[1], \
-		game_personnel.home_roster
-		)
+	away_penalties = chop_penalties_branch (penalties_raw[0], \
+		game_personnel.away_roster)
+	home_penalties = chop_penalties_branch (penalties_raw[1], \
+		game_personnel.home_roster)
 
 	byperiod_raw = tables[5].xpath('./tr/td/table/tr/td/table')
 	
@@ -634,7 +664,9 @@ def harvest (year, game_num, game_info, game_personnel):
 
 	linesmen, referees = chop_officials_branch(tables[9])
 
-	stars_picker, game_stars = chop_stars_branch(tables[9])
+	stars_picker, game_stars = chop_stars_branch(tables[9], \
+		game_info.away_team, game_info.home_team, game_personnel.away_roster,  \
+		game_personnel.home_roster)
 
 	return GameSummary (goals, away_penalties, home_penalties, \
 			away_periods, home_periods, away_powerplay, home_powerplay, \
@@ -647,8 +679,8 @@ if __name__ == '__main__':
 
 	import GameHeader
 	
-	year = '20152016'
-	game_num = '0001'
+	year = '20142015'
+	game_num = '0008'
 	report_type = 'PL'
 	game_type = '02'
 
@@ -656,5 +688,4 @@ if __name__ == '__main__':
 	game_personnel = Roster.harvest (year, game_num)
 	game_summary  = harvest (year, game_num, game_info, game_personnel)
 
-	for goalie in game_summary.home_goalies:
-		print goalie
+	print game_summary

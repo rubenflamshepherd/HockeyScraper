@@ -1,15 +1,84 @@
 import GameHeader
 import GameSummary
+import Operations
 import PlayByPlay
 import Roster
-import unittest
+import unittest # Probably unneccesary if we stick with nose
+
+from nose.tools import assert_equals
+
+def test_all():
+	year = '20142015'
+	report_type = 'PL'
+	game_type = '02'
+
+	for x in range (750,1150):
+		game_num = Operations.pad_game_num(x)
+		game_info = GameHeader.harvest(year, game_num, report_type, game_type)
+		game_personnel = Roster.harvest(year, game_num)
+		game_summary = GameSummary.harvest(year, game_num, game_info, game_personnel)
+	
+		yield check_refs, game_personnel, game_summary
+
+def check_refs(game_personnel, game_summary):
+	for index, item in enumerate(game_summary.referees):
+		assert_equals(item.num, game_personnel.referees[index].num)
+		assert_equals(item.first_name, game_personnel.referees[index].first_name)
+		assert_equals(item.last_name, game_personnel.referees[index].last_name)
+
+	for index, item in enumerate(game_summary.linesmen):
+		assert_equals(item.num, game_personnel.linesmen[index].num)
+		assert_equals(item.first_name, game_personnel.linesmen[index].first_name)
+		assert_equals(item.last_name, game_personnel.linesmen[index].last_name)
+
+'''
+class Test_GSvsR(object):
+
+	def __init__(self):
+		print 'In __init__()'
+		self.year = '20142015'
+
+	@classmethod
+	def setup_class(self):
+		print 'In setUp()'
+		
+		#game_num = Operations.pad_game(game_num_raw)
+		year = '20142015'
+		game_num = '0001'
+		report_type = 'PL'
+		game_type = '02'
+
+		self.game_info = GameHeader.harvest(self.year, game_num, report_type, game_type)
+		self.game_personnel = Roster.harvest(self.year, game_num)
+		self.game_summary = GameSummary.harvest(self.year, game_num, self.game_info, self.game_personnel)
+
+	@classmethod
+	def teardown_class(self):
+		print 'In teardown_class()'
+		del self.game_personnel
+		del self.game_summary
+
+
+	def test_officials(self):
+
+		for index, item in enumerate(self.game_summary.referees):
+			assert_equals(item.num, self.game_personnel.referees[index].num)
+			assert_equals(item.first_name, self.game_personnel.referees[index].first_name)
+			assert_equals(item.last_name, self.game_personnel.referees[index].last_name)
+
+		for index, item in enumerate(self.game_summary.linesmen):
+			assert_equals(item.num, self.game_personnel.linesmen[index].num)
+			assert_equals(item.first_name, self.game_personnel.linesmen[index].first_name)
+			assert_equals(item.last_name, self.game_personnel.linesmen[index].last_name)
+
+
 
 class GameSummaryVsRoster(unittest.TestCase):
 
-	def setUp(self):
-
+	def setUp(self, game_num_raw):
 		year = '20142015'
-		game_num = '0002'
+		game_num = Operations.pad_game(game_num_raw)
+		#game_num = '0001'
 		report_type = 'PL'
 		game_type = '02'
 
@@ -17,12 +86,6 @@ class GameSummaryVsRoster(unittest.TestCase):
 		self.game_info = GameHeader.harvest(year, game_num, report_type, game_type)
 		self.game_personnel = Roster.harvest(year, game_num)
 		self.game_summary = GameSummary.harvest(year, game_num, self.game_info, self.game_personnel)
-
-	def tearDown(self):
-
-		print 'In tearDown()'
-		del self.game_personnel
-		del self.game_summary
 
 	def test_officials(self):
 
@@ -35,6 +98,12 @@ class GameSummaryVsRoster(unittest.TestCase):
 			self.assertEqual(item.num, self.game_personnel.linesmen[index].num)
 			self.assertEqual(item.first_name, self.game_personnel.linesmen[index].first_name)
 			self.assertEqual(item.last_name, self.game_personnel.linesmen[index].last_name)
+
+	def tearDown(self):
+
+		print 'In tearDown()'
+		del self.game_personnel
+		del self.game_summary
 
 class GameSummaryVsPlayByPlay(unittest.TestCase):
 
@@ -149,43 +218,34 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 			
 			if period.period_num in away_goals_dict:
 				self.assertEqual(
-					period.num_goals, \
-					str(len(away_goals_dict[period.period_num]))
-					)
+					period.num_goals, 
+					str(len(away_goals_dict[period.period_num])))
 				self.assertEqual(
 					gs_goalie_num_goals,
-					len(away_goals_dict[period.period_num])
-					)
+					len(away_goals_dict[period.period_num]))
 			if period.period_num in away_shots_dict:
 				self.assertEqual(
-					int(period.num_shots) - int(period.num_goals), \
-					len(away_shots_dict[period.period_num])
-					)
+					int(period.num_shots) - int(period.num_goals), 
+					len(away_shots_dict[period.period_num]))
 				self.assertEqual(
 					gs_goalie_num_shots - gs_goalie_num_goals,
-					len(away_shots_dict[period.period_num])
-					)
+					len(away_shots_dict[period.period_num]))
 			if period.period_num in away_penalties_dict:
 				self.assertEqual(
-					int(period.num_penalties), \
-					len(away_penalties_dict[period.period_num])
-					)
+					int(period.num_penalties), 
+					len(away_penalties_dict[period.period_num]))
 				
 				PIM_counter = 0
 				for item in away_penalties_dict[period.period_num]:
 					PIM_counter += int(item.length)
 
-				self.assertEqual(
-					period.PIM, \
-					str(PIM_counter)
-					)
+				self.assertEqual(period.PIM, str(PIM_counter))
 
 		for period in self.game_summary.home_periods:
 			if period.period_num in home_goals_dict:
 				self.assertEqual(
-					period.num_goals, \
-					str(len(home_goals_dict[period.period_num]))
-					)
+					period.num_goals, 
+					str(len(home_goals_dict[period.period_num])))
 
 				gs_goalie_num_goals = 0
 				# home goals are scored on away_goalie
@@ -198,29 +258,23 @@ class GameSummaryVsPlayByPlay(unittest.TestCase):
 							gs_goalie_num_goals += int (field_goals)
 				self.assertEqual(
 					gs_goalie_num_goals,
-					len(home_goals_dict[period.period_num])
-					)
+					len(home_goals_dict[period.period_num]))
 
 			if period.period_num in home_shots_dict:
 				self.assertEqual(
-					int(period.num_shots) - int(period.num_goals), \
-					len(home_shots_dict[period.period_num])
-					)
+					int(period.num_shots) - int(period.num_goals), 
+					len(home_shots_dict[period.period_num]))
 			if period.period_num in home_penalties_dict:
 				self.assertEqual (
-					int(period.num_penalties), \
-					len(home_penalties_dict[period.period_num])
-					)
+					int(period.num_penalties), 
+					len(home_penalties_dict[period.period_num]))
 
 				PIM_counter = 0
 				for item in home_penalties_dict[period.period_num]:
 					PIM_counter += int(item.length)
 
-				self.assertEqual(
-					period.PIM, \
-					str(PIM_counter)
-					)
+				self.assertEqual(period.PIM, str(PIM_counter))
 
 if __name__ == '__main__':
-
 	unittest.main()
+'''

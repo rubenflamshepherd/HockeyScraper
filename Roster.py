@@ -85,6 +85,7 @@ class Linesman(Official):
 			+ ' ' + str(self.last_name) + '\n'
 
 class GamePersonnel(object):
+	
 	def __init__ (self, away_roster, home_roster, away_coach, home_coach, \
 		referees, linesmen):
 		self.away_roster = away_roster
